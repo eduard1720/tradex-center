@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #0a0b0d;
+  color: #e7e9ea;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Thin custom scrollbar to match the dark UI */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+  background-clip: content-box;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-card border border-line shadow-card;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-card-soft px-3 py-1.5 text-xs text-muted;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-black transition-colors hover:bg-brand-hover;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-card-soft px-4 py-2.5 text-sm font-medium text-white/90 transition-colors hover:bg-card-hover;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-card-soft px-4 py-3 text-sm text-white placeholder:text-muted/70 outline-none transition-colors focus:border-brand/60;
+  }
+  .label {
+    @apply mb-2 block text-xs font-medium uppercase tracking-wide text-muted;
+  }
+}
+
+/* Subtle grid / glow backdrop used behind the app */
+.app-backdrop {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(247, 147, 26, 0.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(247, 147, 26, 0.04), transparent 55%),
+    #0a0b0d;
+}
