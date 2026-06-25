@@ -11,9 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Hurtado Trader Academy — Clases de trading",
+  title: "TradeX Center — Clases de trading",
   description:
-    "Plataforma de formación de trading de Angel Hurtado. Clases grabadas, rutas de aprendizaje y análisis de mercado.",
+    "Plataforma de formación de trading de Angel Hurtado. Clases en módulos, clases en vivo, noticias del mercado y comunidad.",
 };
 
 export default function RootLayout({
@@ -32,7 +32,7 @@ export default function RootLayout({
               {children}
             </main>
             <footer className="border-t border-line px-4 py-6 text-center text-xs text-muted md:px-8">
-              © {new Date().getFullYear()} Hurtado Trader Academy · Hecho para Angel Hurtado ·
+              © {new Date().getFullYear()} TradeX Center · Hecho para Angel Hurtado ·
               El trading conlleva riesgo de pérdida de capital.
             </footer>
           </div>

@@ -20,6 +20,8 @@ function rawSeed(): NewClassInput[] {
       durationMin: 24,
       instructor: "Angel Hurtado",
       tags: ["velas", "básico", "gráficos"],
+      module: 1,
+      moduleTitle: "Fundamentos del Trading",
     },
     {
       title: "Soportes y resistencias que de verdad funcionan",
@@ -31,6 +33,8 @@ function rawSeed(): NewClassInput[] {
       durationMin: 38,
       instructor: "Angel Hurtado",
       tags: ["soportes", "resistencias"],
+      module: 1,
+      moduleTitle: "Fundamentos del Trading",
     },
     {
       title: "Estructura de mercado y order blocks",
@@ -42,50 +46,8 @@ function rawSeed(): NewClassInput[] {
       durationMin: 52,
       instructor: "Angel Hurtado",
       tags: ["smc", "order block", "estructura"],
-    },
-    {
-      title: "Gestión de riesgo: nunca pierdas tu cuenta",
-      description:
-        "Tamaño de posición, ratio riesgo/beneficio, y cómo sobrevivir a una racha de pérdidas sin reventar tu capital.",
-      category: "Gestión de Riesgo",
-      level: "Principiante",
-      videoUrl: "https://www.youtube.com/watch?v=Nb2x4mAvLZA",
-      durationMin: 31,
-      instructor: "Angel Hurtado",
-      tags: ["riesgo", "money management"],
-    },
-    {
-      title: "Psicología del trader: controla el miedo y la avaricia",
-      description:
-        "Rutinas, journaling y mentalidad para operar con disciplina y dejar de sabotear tus propios setups.",
-      category: "Psicología",
-      level: "Intermedio",
-      videoUrl: "https://www.youtube.com/watch?v=6_b7RDuLwcI",
-      durationMin: 27,
-      instructor: "Angel Hurtado",
-      tags: ["mentalidad", "disciplina"],
-    },
-    {
-      title: "Operando Bitcoin: setups en temporalidad alta",
-      description:
-        "Análisis de BTC en 4H y diario, niveles macro y cómo planificar entradas swing en cripto.",
-      category: "Cripto",
-      level: "Avanzado",
-      videoUrl: "https://www.youtube.com/watch?v=l1F2dvk3xCc",
-      durationMin: 44,
-      instructor: "Angel Hurtado",
-      tags: ["btc", "swing", "cripto"],
-    },
-    {
-      title: "Sesión en vivo: análisis del mercado de la semana",
-      description:
-        "Repaso en directo de los pares principales, oportunidades de la semana y preguntas de la comunidad.",
-      category: "En Vivo",
-      level: "Intermedio",
-      videoUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
-      durationMin: 68,
-      instructor: "Angel Hurtado",
-      tags: ["en vivo", "análisis semanal"],
+      module: 2,
+      moduleTitle: "Análisis Técnico y Price Action",
     },
     {
       title: "Forex: las 3 sesiones y cómo aprovechar la volatilidad",
@@ -97,6 +59,60 @@ function rawSeed(): NewClassInput[] {
       durationMin: 35,
       instructor: "Angel Hurtado",
       tags: ["forex", "sesiones"],
+      module: 2,
+      moduleTitle: "Análisis Técnico y Price Action",
+    },
+    {
+      title: "Gestión de riesgo: nunca pierdas tu cuenta",
+      description:
+        "Tamaño de posición, ratio riesgo/beneficio, y cómo sobrevivir a una racha de pérdidas sin reventar tu capital.",
+      category: "Gestión de Riesgo",
+      level: "Principiante",
+      videoUrl: "https://www.youtube.com/watch?v=Nb2x4mAvLZA",
+      durationMin: 31,
+      instructor: "Angel Hurtado",
+      tags: ["riesgo", "money management"],
+      module: 3,
+      moduleTitle: "Gestión y Psicología",
+    },
+    {
+      title: "Psicología del trader: controla el miedo y la avaricia",
+      description:
+        "Rutinas, journaling y mentalidad para operar con disciplina y dejar de sabotear tus propios setups.",
+      category: "Psicología",
+      level: "Intermedio",
+      videoUrl: "https://www.youtube.com/watch?v=6_b7RDuLwcI",
+      durationMin: 27,
+      instructor: "Angel Hurtado",
+      tags: ["mentalidad", "disciplina"],
+      module: 3,
+      moduleTitle: "Gestión y Psicología",
+    },
+    {
+      title: "Operando Bitcoin: setups en temporalidad alta",
+      description:
+        "Análisis de BTC en 4H y diario, niveles macro y cómo planificar entradas swing en cripto.",
+      category: "Cripto",
+      level: "Avanzado",
+      videoUrl: "https://www.youtube.com/watch?v=l1F2dvk3xCc",
+      durationMin: 44,
+      instructor: "Angel Hurtado",
+      tags: ["btc", "swing", "cripto"],
+      module: 4,
+      moduleTitle: "Operativa en Mercados Reales",
+    },
+    {
+      title: "Sesión en vivo: análisis del mercado de la semana",
+      description:
+        "Repaso en directo de los pares principales, oportunidades de la semana y preguntas de la comunidad.",
+      category: "En Vivo",
+      level: "Intermedio",
+      videoUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      durationMin: 68,
+      instructor: "Angel Hurtado",
+      tags: ["en vivo", "análisis semanal"],
+      module: 0,
+      moduleTitle: "",
     },
   ];
 }
@@ -110,10 +126,27 @@ function hydrate(input: NewClassInput, idx: number): TradingClass {
     embedUrl: parsed.embedUrl,
     thumbnail: parsed.thumbnail,
     createdAt: created.toISOString(),
+    order: 0, // se asigna en assignOrders()
   };
 }
 
-function buildEntry(input: NewClassInput): TradingClass {
+/** Asigna order = posición de la clase dentro de su módulo (1, 2, 3...),
+ *  respetando el orden en que aparecen en la lista. */
+function assignOrders(list: TradingClass[]): TradingClass[] {
+  const counters: Record<number, number> = {};
+  return list.map((c) => {
+    counters[c.module] = (counters[c.module] ?? 0) + 1;
+    return { ...c, order: counters[c.module] };
+  });
+}
+
+/** Calcula el siguiente order disponible para una clase nueva en un módulo. */
+function nextOrder(existing: TradingClass[], module: number): number {
+  const inModule = existing.filter((c) => c.module === module);
+  return inModule.reduce((max, c) => Math.max(max, c.order ?? 0), 0) + 1;
+}
+
+function buildEntry(input: NewClassInput, order: number): TradingClass {
   const parsed = parseVideo(input.videoUrl);
   return {
     ...input,
@@ -121,6 +154,7 @@ function buildEntry(input: NewClassInput): TradingClass {
     embedUrl: parsed.embedUrl,
     thumbnail: parsed.thumbnail,
     createdAt: new Date().toISOString(),
+    order,
   };
 }
 
@@ -141,6 +175,9 @@ interface Row {
   instructor: string;
   tags: string[] | null;
   created_at: string;
+  module: number | null;
+  module_title: string | null;
+  lesson_order: number | null;
 }
 
 function rowToClass(r: Row): TradingClass {
@@ -157,6 +194,9 @@ function rowToClass(r: Row): TradingClass {
     instructor: r.instructor,
     tags: r.tags ?? [],
     createdAt: r.created_at,
+    module: r.module ?? 0,
+    moduleTitle: r.module_title ?? "",
+    order: r.lesson_order ?? 0,
   };
 }
 
@@ -174,6 +214,9 @@ function classToRow(c: TradingClass): Row {
     instructor: c.instructor,
     tags: c.tags,
     created_at: c.createdAt,
+    module: c.module,
+    module_title: c.moduleTitle,
+    lesson_order: c.order,
   };
 }
 
@@ -196,7 +239,8 @@ const sb = {
     return data ? rowToClass(data as Row) : undefined;
   },
   async add(input: NewClassInput): Promise<TradingClass> {
-    const entry = buildEntry(input);
+    const existing = await sb.getAll();
+    const entry = buildEntry(input, nextOrder(existing, input.module));
     const { error } = await getSupabase().from("classes").insert(classToRow(entry));
     if (error) throw new Error(error.message);
     return entry;
@@ -213,27 +257,32 @@ const DATA_FILE = path.join(DATA_DIR, "classes.json");
 function ensureFile(): void {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(DATA_FILE)) {
-    const seeded = rawSeed().map((c, i) => hydrate(c, i));
+    const seeded = assignOrders(rawSeed().map((c, i) => hydrate(c, i)));
     fs.writeFileSync(DATA_FILE, JSON.stringify(seeded, null, 2), "utf-8");
   }
 }
 
 const json = {
   getAll(): TradingClass[] {
-    ensureFile();
     try {
+      ensureFile();
       const list = JSON.parse(fs.readFileSync(DATA_FILE, "utf-8")) as TradingClass[];
       return list.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     } catch {
-      return [];
+      // El sistema de archivos no está disponible o es de solo lectura
+      // (p. ej. Vercel sin Supabase): usa el seed en memoria para que la app
+      // siga funcionando como demo.
+      return seedClasses().sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     }
   },
   add(input: NewClassInput): TradingClass {
     ensureFile();
     const list = json.getAll();
-    const entry = buildEntry(input);
+    const entry = buildEntry(input, nextOrder(list, input.module));
     list.unshift(entry);
     fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), "utf-8");
     return entry;
@@ -259,5 +308,5 @@ export async function addClass(input: NewClassInput): Promise<TradingClass> {
 
 /** Exposed so a seed script / SQL generator can reuse the same demo data. */
 export function seedClasses(): TradingClass[] {
-  return rawSeed().map((c, i) => hydrate(c, i));
+  return assignOrders(rawSeed().map((c, i) => hydrate(c, i)));
 }

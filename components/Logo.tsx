@@ -23,7 +23,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
       {!compact && (
         <span className="leading-tight">
           <span className="block text-sm font-semibold tracking-tight text-white">
-            Hurtado<span className="text-brand">Trader</span>
+            TradeX<span className="text-brand">Center</span>
           </span>
           <span className="block text-[10px] uppercase tracking-[0.18em] text-muted">
             Academy

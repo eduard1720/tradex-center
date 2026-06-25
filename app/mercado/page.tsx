@@ -2,7 +2,7 @@ import { ArrowLeft, ArrowRight, SlidersHorizontal } from "lucide-react";
 import { Sparkline } from "@/components/Sparkline";
 import { COINS, TOP_MOVERS } from "@/lib/mock";
 
-export const metadata = { title: "Mercado — Hurtado Trader Academy" };
+export const metadata = { title: "Mercado — TradeX Center" };
 
 function pct(n: number) {
   const positive = n >= 0;

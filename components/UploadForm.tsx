@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { Upload, CheckCircle2, AlertCircle, Youtube, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Upload, CheckCircle2, AlertCircle, Youtube, Loader2, Lock } from "lucide-react";
 import { CATEGORIES, LEVELS } from "@/lib/types";
 import { parseVideo } from "@/lib/video";
+
+const ADMIN_KEY = "tradex_admin_pw";
 
 const empty = {
   title: "",
@@ -15,6 +17,8 @@ const empty = {
   instructor: "Angel Hurtado",
   durationMin: "",
   tags: "",
+  module: "1",
+  moduleTitle: "",
 };
 
 export function UploadForm() {
@@ -22,6 +26,13 @@ export function UploadForm() {
   const [form, setForm] = useState(empty);
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [message, setMessage] = useState("");
+
+  // --- Puerta de administrador -------------------------------------------
+  const [adminPw, setAdminPw] = useState<string | null>(null);
+  const [pwInput, setPwInput] = useState("");
+  useEffect(() => {
+    setAdminPw(localStorage.getItem(ADMIN_KEY));
+  }, []);
 
   const parsed = useMemo(() => parseVideo(form.videoUrl), [form.videoUrl]);
   const validVideo = parsed.provider !== "unknown";
@@ -35,10 +46,25 @@ export function UploadForm() {
     try {
       const res = await fetch("/api/clases", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, durationMin: Number(form.durationMin) }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": adminPw ?? "",
+        },
+        body: JSON.stringify({
+          ...form,
+          durationMin: Number(form.durationMin),
+          module: Number(form.module),
+        }),
       });
       const data = await res.json();
+      if (res.status === 401) {
+        // Clave incorrecta: vuelve a pedir acceso.
+        localStorage.removeItem(ADMIN_KEY);
+        setAdminPw(null);
+        setStatus("idle");
+        setMessage("");
+        return;
+      }
       if (!res.ok) {
         setStatus("error");
         setMessage(data.error ?? "No se pudo guardar la clase.");
@@ -52,6 +78,49 @@ export function UploadForm() {
       setStatus("error");
       setMessage("Error de red. Inténtalo de nuevo.");
     }
+  }
+
+  // Si no hay clave guardada, muestra la pantalla de acceso de administrador.
+  if (!adminPw) {
+    return (
+      <div className="mx-auto max-w-md">
+        <div className="card space-y-4 p-6 text-center">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-brand-soft text-brand">
+            <Lock className="h-6 w-6" />
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold text-white">Acceso de administrador</h2>
+            <p className="mt-1 text-sm text-muted">
+              Solo Angel puede subir clases. Ingresa la clave de administrador.
+            </p>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!pwInput.trim()) return;
+              localStorage.setItem(ADMIN_KEY, pwInput.trim());
+              setAdminPw(pwInput.trim());
+            }}
+            className="space-y-3"
+          >
+            <input
+              type="password"
+              autoFocus
+              className="input text-center"
+              placeholder="Clave de administrador"
+              value={pwInput}
+              onChange={(e) => setPwInput(e.target.value)}
+            />
+            <button type="submit" className="btn-primary w-full">
+              <Lock className="h-4 w-4" /> Entrar
+            </button>
+          </form>
+          <p className="text-[11px] text-muted">
+            La clave se configura en la variable de entorno <code>ADMIN_PASSWORD</code>.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -140,6 +209,36 @@ export function UploadForm() {
             <label className="label">Etiquetas (separadas por comas)</label>
             <input className="input" placeholder="velas, soportes, btc" value={form.tags} onChange={(e) => set("tags", e.target.value)} />
           </div>
+        </div>
+
+        <div className="rounded-xl border border-line bg-card-soft/40 p-4">
+          <p className="mb-3 text-sm font-medium text-white">Módulo del curso</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label className="label">N° de módulo</label>
+              <input
+                type="number"
+                min={0}
+                className="input"
+                placeholder="1"
+                value={form.module}
+                onChange={(e) => set("module", e.target.value)}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="label">Nombre del módulo</label>
+              <input
+                className="input"
+                placeholder="Ej: Fundamentos del Trading"
+                value={form.moduleTitle}
+                onChange={(e) => set("moduleTitle", e.target.value)}
+              />
+            </div>
+          </div>
+          <p className="mt-2 text-[11px] text-muted">
+            Usa <strong>módulo 0</strong> para clases en vivo (no entran en la ruta de módulos).
+            El orden dentro del módulo se asigna automáticamente.
+          </p>
         </div>
       </div>
 

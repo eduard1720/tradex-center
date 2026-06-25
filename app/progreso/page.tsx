@@ -3,7 +3,7 @@ import { AreaChart } from "@/components/AreaChart";
 import { StatCard } from "@/components/StatCard";
 import { PROGRESS_CURVE } from "@/lib/mock";
 
-export const metadata = { title: "Mi progreso — Hurtado Trader Academy" };
+export const metadata = { title: "Mi progreso — TradeX Center" };
 
 const COURSES = [
   { name: "Fundamentos del trading", done: 8, total: 8 },

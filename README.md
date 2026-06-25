@@ -1,9 +1,24 @@
-# Hurtado Trader Academy
+# TradeX Center
 
 Plataforma web de formación de trading para **Angel Hurtado**. Angel sube sus clases
-grabadas (pegando un link de YouTube o Vimeo) y sus estudiantes las ven dentro de una
-interfaz tipo dashboard fintech (tema oscuro, acento naranja) inspirada en el diseño
-"Quantum".
+grabadas (pegando un link de YouTube o Vimeo) organizadas en **módulos**, y sus
+estudiantes las ven dentro de una interfaz tipo dashboard fintech (tema oscuro, acento
+naranja).
+
+> ⚙️ **Configuración rápida:** edita [`lib/site.ts`](lib/site.ts) para poner el número y
+> grupo de WhatsApp, las redes sociales, el precio de la suscripción y la fecha de
+> vigencia. La clave para subir clases se define en la variable de entorno
+> `ADMIN_PASSWORD` (por defecto `angel-admin`).
+
+## Funciones principales
+
+- **Clases por módulos** con desbloqueo secuencial (una clase se desbloquea al completar
+  la anterior; el progreso se guarda en el navegador).
+- **Clases en vivo**, **Noticias** (calendario de ForexFactory) y **Comunidad** (grupo de
+  WhatsApp).
+- **Dólar paralelo (Bolivia)** en vivo vía Binance P2P y **recordatorio de vigencia**
+  mensual con renovación por WhatsApp.
+- **Suscripción** por WhatsApp y panel de **administrador** para subir clases.
 
 ## Stack
 
