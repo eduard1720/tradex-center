@@ -1,16 +1,9 @@
-import Link from "next/link";
-import { Radio, ArrowUpRight, CalendarClock } from "lucide-react";
-import { ClassCard } from "@/components/ClassCard";
-import { getAllClasses } from "@/lib/data";
+import { Radio, ArrowUpRight, CalendarClock, Video } from "lucide-react";
 import { waLink } from "@/lib/site";
 
 export const metadata = { title: "Clases en vivo — TradeX Center" };
-export const dynamic = "force-dynamic";
 
-export default async function EnVivoPage() {
-  const classes = await getAllClasses();
-  const live = classes.filter((c) => c.category === "En Vivo");
-
+export default function EnVivoPage() {
   return (
     <div className="space-y-6 animate-fade-up">
       <div>
@@ -29,9 +22,7 @@ export default async function EnVivoPage() {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-neg/15 px-2.5 py-1 text-xs font-medium text-neg">
           <Radio className="h-3.5 w-3.5" /> Próxima sesión en vivo
         </span>
-        <h2 className="mt-3 text-lg font-semibold text-white">
-          Análisis semanal del mercado
-        </h2>
+        <h2 className="mt-3 text-lg font-semibold text-white">Análisis semanal del mercado</h2>
         <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
           <CalendarClock className="h-4 w-4" /> Todos los domingos · 19:00 (hora Bolivia)
         </p>
@@ -45,23 +36,18 @@ export default async function EnVivoPage() {
         </a>
       </div>
 
-      {/* Grabaciones */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">Sesiones grabadas</h2>
-        {live.length === 0 ? (
-          <div className="card grid place-items-center py-16 text-center">
-            <p className="text-muted">Aún no hay sesiones en vivo grabadas.</p>
-            <Link href="/clases" className="mt-3 text-sm text-brand hover:text-brand-hover">
-              Ver clases por módulos →
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {live.map((c) => (
-              <ClassCard key={c.id} cls={c} />
-            ))}
-          </div>
-        )}
+      {/* Cómo funciona */}
+      <div className="card flex items-start gap-4 p-6">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
+          <Video className="h-5 w-5" />
+        </span>
+        <div>
+          <h3 className="text-base font-semibold text-white">¿Cómo me uno?</h3>
+          <p className="mt-1 text-sm text-muted">
+            Las sesiones en vivo se transmiten para los miembros activos. Pide el enlace por
+            WhatsApp y Angel te lo comparte antes de cada sesión.
+          </p>
+        </div>
       </div>
     </div>
   );

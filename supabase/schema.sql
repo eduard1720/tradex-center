@@ -34,6 +34,21 @@ create policy "Lectura publica de clases"
   using (true);
 
 -- ---------------------------------------------------------------------------
+-- Histórico del dólar paralelo (se llena solo, una fila por día).
+-- ---------------------------------------------------------------------------
+create table if not exists public.dolar_history (
+  date date primary key,
+  buy  numeric not null,
+  sell numeric not null,
+  avg  numeric not null
+);
+alter table public.dolar_history enable row level security;
+drop policy if exists "Lectura publica dolar" on public.dolar_history;
+create policy "Lectura publica dolar"
+  on public.dolar_history for select
+  using (true);
+
+-- ---------------------------------------------------------------------------
 -- Datos de demostración (8 clases en módulos). Cámbialos o bórralos cuando quieras.
 -- ---------------------------------------------------------------------------
 insert into public.classes

@@ -8,11 +8,10 @@ import {
   Radio,
   Check,
   MessageCircle,
+  DollarSign,
 } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { ClassCard } from "@/components/ClassCard";
-import { DolarWidget } from "@/components/DolarWidget";
-import { VigenciaBanner } from "@/components/VigenciaBanner";
 import { SocialLinks } from "@/components/SocialLinks";
 import { getAllClasses } from "@/lib/data";
 import { SITE, waLink } from "@/lib/site";
@@ -49,9 +48,6 @@ export default async function DashboardPage() {
           <MessageCircle className="h-4 w-4" /> Suscribirme
         </a>
       </div>
-
-      {/* Recordatorio de vigencia */}
-      <VigenciaBanner />
 
       {/* Historia de Angel + suscripción */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -108,29 +104,43 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Dólar paralelo + próxima en vivo */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <DolarWidget />
-        </div>
-        {live && (
-          <Link
-            href="/en-vivo"
-            className="card group relative overflow-hidden p-5 transition-colors hover:border-brand/40"
-          >
-            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand/20 blur-2xl" />
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-neg/15 px-2.5 py-1 text-xs font-medium text-neg">
-              <Radio className="h-3.5 w-3.5" /> Próxima en vivo
-            </span>
-            <h3 className="mt-3 text-base font-semibold text-white">{live.title}</h3>
-            <p className="mt-1 text-xs text-muted">
-              Reserva tu lugar para la sesión semanal con Angel.
-            </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand">
-              Ver clases en vivo <ArrowUpRight className="h-4 w-4" />
-            </span>
-          </Link>
-        )}
+      {/* Accesos directos: cambio paralelo + clases en vivo */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <Link
+          href="/dolar"
+          className="card group relative overflow-hidden p-5 transition-colors hover:border-pos/40"
+        >
+          <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-pos/20 blur-2xl" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-pos/15 px-2.5 py-1 text-xs font-medium text-pos">
+            <DollarSign className="h-3.5 w-3.5" /> Cambio paralelo
+          </span>
+          <h3 className="mt-3 text-base font-semibold text-white">Dólar blue de Bolivia</h3>
+          <p className="mt-1 text-xs text-muted">
+            Cotización del paralelo en vivo y su evolución.
+          </p>
+          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-pos">
+            Ver cotización <ArrowUpRight className="h-4 w-4" />
+          </span>
+        </Link>
+
+        <Link
+          href="/en-vivo"
+          className="card group relative overflow-hidden p-5 transition-colors hover:border-brand/40"
+        >
+          <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand/20 blur-2xl" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-neg/15 px-2.5 py-1 text-xs font-medium text-neg">
+            <Radio className="h-3.5 w-3.5" /> Próxima en vivo
+          </span>
+          <h3 className="mt-3 text-base font-semibold text-white">
+            {live ? live.title : "Sesiones en directo con Angel"}
+          </h3>
+          <p className="mt-1 text-xs text-muted">
+            Reserva tu lugar para la sesión semanal con Angel.
+          </p>
+          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand">
+            Ver clases en vivo <ArrowUpRight className="h-4 w-4" />
+          </span>
+        </Link>
       </div>
 
       {/* Stats */}

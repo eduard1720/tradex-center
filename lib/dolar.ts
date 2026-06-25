@@ -3,6 +3,8 @@
 /*  Fuente: mercado P2P de Binance (USDT/BOB), referencia real del paralelo.  */
 /* -------------------------------------------------------------------------- */
 
+import { hasSupabase, getSupabase } from "./supabase";
+
 export interface ParallelRate {
   /** Precio para COMPRAR dólares (Bs por 1 USD). */
   buy: number;
@@ -65,4 +67,43 @@ export async function getParallelUSD(): Promise<ParallelRate | null> {
     source: "Binance P2P (USDT/BOB)",
     updatedAt: new Date().toISOString(),
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Histórico: guarda una foto diaria en Supabase y devuelve la evolución.    */
+/*  El gráfico se construye día a día (requiere la tabla `dolar_history`).    */
+/* -------------------------------------------------------------------------- */
+
+export interface RatePoint {
+  date: string;
+  avg: number;
+}
+
+export async function recordAndGetHistory(
+  rate: ParallelRate | null
+): Promise<RatePoint[]> {
+  if (!hasSupabase()) return [];
+  try {
+    const sb = getSupabase();
+    if (rate) {
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      await sb
+        .from("dolar_history")
+        .upsert(
+          { date: today, buy: rate.buy, sell: rate.sell, avg: rate.avg },
+          { onConflict: "date" }
+        );
+    }
+    const { data, error } = await sb
+      .from("dolar_history")
+      .select("date, avg")
+      .order("date", { ascending: false })
+      .limit(60);
+    if (error || !data) return [];
+    return (data as { date: string; avg: number }[])
+      .map((d) => ({ date: d.date, avg: Number(d.avg) }))
+      .reverse(); // del más antiguo al más reciente
+  } catch {
+    return [];
+  }
 }

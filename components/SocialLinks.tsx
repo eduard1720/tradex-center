@@ -1,4 +1,4 @@
-import { Instagram, Youtube, Twitter, Send, Music2, type LucideIcon } from "lucide-react";
+import { Instagram, Youtube, Twitter, Send, Music2, Link as LinkIcon, type LucideIcon } from "lucide-react";
 import { SITE } from "@/lib/site";
 
 const ICONS: Record<string, { icon: LucideIcon; label: string }> = {
@@ -7,6 +7,7 @@ const ICONS: Record<string, { icon: LucideIcon; label: string }> = {
   youtube: { icon: Youtube, label: "YouTube" },
   telegram: { icon: Send, label: "Telegram" },
   x: { icon: Twitter, label: "X" },
+  linktree: { icon: LinkIcon, label: "Linktree" },
 };
 
 export function SocialLinks({ className = "" }: { className?: string }) {

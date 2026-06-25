@@ -11,7 +11,8 @@ import {
   Layers,
 } from "lucide-react";
 import { getAllClasses, getClassById } from "@/lib/data";
-import { CompleteButton } from "@/components/CompleteButton";
+import { VideoPlayer } from "@/components/VideoPlayer";
+import { parseVideo } from "@/lib/video";
 import type { TradingClass } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -50,17 +51,14 @@ export default async function ClassDetailPage({
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Player + info */}
         <div className="space-y-5 lg:col-span-2">
-          <div className="card overflow-hidden p-0">
-            <div className="relative aspect-video w-full bg-black">
-              <iframe
-                src={cls.embedUrl}
-                title={cls.title}
-                className="absolute inset-0 h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-          </div>
+          <VideoPlayer
+            classId={cls.id}
+            provider={parseVideo(cls.videoUrl).provider}
+            videoId={parseVideo(cls.videoUrl).id}
+            embedUrl={cls.embedUrl}
+            title={cls.title}
+            durationMin={cls.durationMin}
+          />
 
           <div className="card p-5">
             <div className="flex flex-wrap items-center gap-2">
@@ -98,7 +96,6 @@ export default async function ClassDetailPage({
               <div className="flex items-center gap-2">
                 <button className="btn-ghost"><Bookmark className="h-4 w-4" /> Guardar</button>
                 <button className="btn-ghost"><Share2 className="h-4 w-4" /> Compartir</button>
-                <CompleteButton classId={cls.id} />
               </div>
             </div>
 

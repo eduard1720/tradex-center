@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Search, Bell, Menu, X, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
+import { useAdmin } from "@/lib/admin";
 import { MAIN_NAV, ADMIN_NAV } from "@/lib/nav";
 
 const CHIPS = [
@@ -16,6 +17,7 @@ const CHIPS = [
 export function Topbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const isAdmin = useAdmin();
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-bg/70 backdrop-blur-xl">
@@ -84,7 +86,7 @@ export function Topbar() {
               </button>
             </div>
             <nav className="flex flex-col gap-1">
-              {[...MAIN_NAV, ...ADMIN_NAV].map((item) => {
+              {[...MAIN_NAV, ...(isAdmin ? ADMIN_NAV : [])].map((item) => {
                 const Icon = item.icon;
                 const active =
                   item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);

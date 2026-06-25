@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { HelpCircle, Settings, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Logo } from "./Logo";
+import { SidebarVigencia } from "./SidebarVigencia";
+import { AdminControl } from "./AdminControl";
+import { useAdmin } from "@/lib/admin";
 import { MAIN_NAV, ADMIN_NAV, type NavItem } from "@/lib/nav";
 
 function NavLink({
@@ -39,6 +42,7 @@ function NavLink({
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const isAdmin = useAdmin();
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -71,18 +75,29 @@ export function Sidebar() {
           <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} />
         ))}
 
-        <div className="my-3 h-px bg-line" />
-        {!collapsed && (
-          <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted/60">
-            Instructor
-          </p>
+        {/* Sección de instructor: solo visible para Angel (modo admin) */}
+        {isAdmin && (
+          <>
+            <div className="my-3 h-px bg-line" />
+            {!collapsed && (
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted/60">
+                Instructor
+              </p>
+            )}
+            {ADMIN_NAV.map((item) => (
+              <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} />
+            ))}
+          </>
         )}
-        {ADMIN_NAV.map((item) => (
-          <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} />
-        ))}
       </nav>
 
+      {/* Apartado de suscripción/vigencia (encima de Ayuda) */}
+      <div className="mt-2">
+        <SidebarVigencia collapsed={collapsed} />
+      </div>
+
       <div className="mt-2 flex flex-col gap-1 border-t border-line pt-3">
+        <AdminControl collapsed={collapsed} />
         <NavLink
           item={{ label: "Ayuda", href: "/ayuda", icon: HelpCircle }}
           active={isActive("/ayuda")}

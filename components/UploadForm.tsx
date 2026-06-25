@@ -1,12 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Upload, CheckCircle2, AlertCircle, Youtube, Loader2, Lock } from "lucide-react";
 import { CATEGORIES, LEVELS } from "@/lib/types";
 import { parseVideo } from "@/lib/video";
-
-const ADMIN_KEY = "tradex_admin_pw";
+import { useAdmin, getAdminPw, loginAdmin, logoutAdmin } from "@/lib/admin";
 
 const empty = {
   title: "",
@@ -28,11 +27,10 @@ export function UploadForm() {
   const [message, setMessage] = useState("");
 
   // --- Puerta de administrador -------------------------------------------
-  const [adminPw, setAdminPw] = useState<string | null>(null);
+  const isAdmin = useAdmin();
   const [pwInput, setPwInput] = useState("");
-  useEffect(() => {
-    setAdminPw(localStorage.getItem(ADMIN_KEY));
-  }, []);
+  const [pwError, setPwError] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
 
   const parsed = useMemo(() => parseVideo(form.videoUrl), [form.videoUrl]);
   const validVideo = parsed.provider !== "unknown";
@@ -48,7 +46,7 @@ export function UploadForm() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-password": adminPw ?? "",
+          "x-admin-password": getAdminPw() ?? "",
         },
         body: JSON.stringify({
           ...form,
@@ -58,9 +56,8 @@ export function UploadForm() {
       });
       const data = await res.json();
       if (res.status === 401) {
-        // Clave incorrecta: vuelve a pedir acceso.
-        localStorage.removeItem(ADMIN_KEY);
-        setAdminPw(null);
+        // Sesión inválida: vuelve a pedir acceso.
+        logoutAdmin();
         setStatus("idle");
         setMessage("");
         return;
@@ -80,8 +77,8 @@ export function UploadForm() {
     }
   }
 
-  // Si no hay clave guardada, muestra la pantalla de acceso de administrador.
-  if (!adminPw) {
+  // Si no hay sesión de administrador, muestra la pantalla de acceso.
+  if (!isAdmin) {
     return (
       <div className="mx-auto max-w-md">
         <div className="card space-y-4 p-6 text-center">
@@ -95,24 +92,33 @@ export function UploadForm() {
             </p>
           </div>
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               if (!pwInput.trim()) return;
-              localStorage.setItem(ADMIN_KEY, pwInput.trim());
-              setAdminPw(pwInput.trim());
+              setPwLoading(true);
+              setPwError(false);
+              const ok = await loginAdmin(pwInput.trim());
+              setPwLoading(false);
+              if (ok) {
+                setPwInput("");
+                router.refresh();
+              } else {
+                setPwError(true);
+              }
             }}
             className="space-y-3"
           >
             <input
               type="password"
               autoFocus
-              className="input text-center"
+              className={`input text-center ${pwError ? "border-neg" : ""}`}
               placeholder="Clave de administrador"
               value={pwInput}
               onChange={(e) => setPwInput(e.target.value)}
             />
-            <button type="submit" className="btn-primary w-full">
-              <Lock className="h-4 w-4" /> Entrar
+            {pwError && <p className="text-xs text-neg">Clave incorrecta.</p>}
+            <button type="submit" disabled={pwLoading} className="btn-primary w-full disabled:opacity-60">
+              <Lock className="h-4 w-4" /> {pwLoading ? "Verificando..." : "Entrar"}
             </button>
           </form>
           <p className="text-[11px] text-muted">

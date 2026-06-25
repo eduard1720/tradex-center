@@ -1,4 +1,5 @@
 import { ExternalLink, CalendarClock } from "lucide-react";
+import { EconomicCalendar } from "@/components/EconomicCalendar";
 
 export const metadata = { title: "Noticias — TradeX Center" };
 
@@ -14,11 +15,11 @@ export default function NoticiasPage() {
             Noticias del mercado
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            Las noticias y datos de alto impacto de <strong>ForexFactory</strong>. Revisa el
-            calendario antes de operar para evitar la volatilidad de las noticias.
+            Eventos y datos de alto impacto (NFP, FOMC, IPC…). Revísalos antes de operar para
+            evitar la volatilidad de las noticias.
           </p>
         </div>
-        <a href={FF_URL} target="_blank" rel="noopener noreferrer" className="btn-primary">
+        <a href={FF_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">
           <ExternalLink className="h-4 w-4" /> Abrir ForexFactory
         </a>
       </div>
@@ -26,24 +27,16 @@ export default function NoticiasPage() {
       <div className="card overflow-hidden p-0">
         <div className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm text-muted">
           <CalendarClock className="h-4 w-4 text-brand" />
-          Calendario de ForexFactory
+          Calendario económico
         </div>
-        {/* ForexFactory embebido. Si tu navegador/ForexFactory bloquea el iframe,
-            usa el botón "Abrir ForexFactory" de arriba. */}
-        <iframe
-          src={FF_URL}
-          title="ForexFactory — Calendario económico"
-          className="h-[1200px] w-full bg-white"
-          loading="lazy"
-        />
+        <div className="p-2">
+          <EconomicCalendar />
+        </div>
       </div>
 
       <p className="text-center text-xs text-muted">
-        Fuente:{" "}
-        <a href={FF_URL} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-          forexfactory.com
-        </a>
-        . Si el calendario no carga aquí, ábrelo con el botón superior.
+        Calendario provisto por TradingView. Para la vista clásica de ForexFactory, usa el
+        botón “Abrir ForexFactory”.
       </p>
     </div>
   );

@@ -12,19 +12,20 @@ export const SITE = {
   price: "Bs 350 / mes",
 
   /* --- WhatsApp ----------------------------------------------------------- */
-  /** Número de Angel en formato internacional, SIN +, espacios ni guiones.
-   *  Ej. Bolivia: 591 7xxxxxxx  →  "5917XXXXXXX" */
-  whatsappNumber: "59170000000",
-  /** Link directo al GRUPO de WhatsApp de la comunidad (botón "Comunidad"). */
-  whatsappGroup: "https://chat.whatsapp.com/XXXXXXXXXXXXXXXXX",
+  /** Número de Angel en formato internacional, SIN +, espacios ni guiones. */
+  whatsappNumber: "59175541308",
+  /** Link directo al GRUPO de WhatsApp de la comunidad (botón "Comunidad").
+   *  Si lo dejas en "", el botón abre el chat directo con Angel. */
+  whatsappGroup: "",
 
   /* --- Redes sociales (deja en "" para ocultar) --------------------------- */
   social: {
-    instagram: "https://instagram.com/tu_usuario",
-    tiktok: "https://tiktok.com/@tu_usuario",
-    youtube: "https://youtube.com/@tu_canal",
+    instagram: "https://www.instagram.com/angelhurtado_p",
+    tiktok: "",
+    youtube: "https://www.youtube.com/@angelhurtado_p",
     telegram: "",
     x: "",
+    linktree: "https://linktr.ee/angelhurtado_p",
   },
 
   /* --- Vigencia de la suscripción ----------------------------------------- */

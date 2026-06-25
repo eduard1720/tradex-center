@@ -5,6 +5,7 @@ import {
   Newspaper,
   Sparkles,
   LineChart,
+  DollarSign,
   Trophy,
   Users,
   Upload,
@@ -24,6 +25,7 @@ export const MAIN_NAV: NavItem[] = [
   { label: "Noticias", href: "/noticias", icon: Newspaper },
   { label: "Análisis IA", href: "/analisis", icon: Sparkles },
   { label: "Mercado", href: "/mercado", icon: LineChart },
+  { label: "Dólar paralelo", href: "/dolar", icon: DollarSign },
   { label: "Mi progreso", href: "/progreso", icon: Trophy },
   { label: "Comunidad", href: "/comunidad", icon: Users },
 ];
