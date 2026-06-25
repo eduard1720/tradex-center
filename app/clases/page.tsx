@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Upload, Radio } from "lucide-react";
 import { ModulesView } from "@/components/ModulesView";
+import { AdminOnly } from "@/components/AdminOnly";
 import { getAllClasses } from "@/lib/data";
 
 export const metadata = { title: "Clases — TradeX Center" };
@@ -24,9 +25,11 @@ export default async function ClasesPage() {
           <Link href="/en-vivo" className="btn-ghost">
             <Radio className="h-4 w-4" /> Clases en vivo
           </Link>
-          <Link href="/subir" className="btn-primary">
-            <Upload className="h-4 w-4" /> Subir clase
-          </Link>
+          <AdminOnly>
+            <Link href="/subir" className="btn-primary">
+              <Upload className="h-4 w-4" /> Subir clase
+            </Link>
+          </AdminOnly>
         </div>
       </div>
       <ModulesView classes={classes} />
