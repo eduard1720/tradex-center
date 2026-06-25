@@ -264,14 +264,19 @@ function ensureFile(): void {
 
 const json = {
   getAll(): TradingClass[] {
-    ensureFile();
     try {
+      ensureFile();
       const list = JSON.parse(fs.readFileSync(DATA_FILE, "utf-8")) as TradingClass[];
       return list.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     } catch {
-      return [];
+      // El sistema de archivos no está disponible o es de solo lectura
+      // (p. ej. Vercel sin Supabase): usa el seed en memoria para que la app
+      // siga funcionando como demo.
+      return seedClasses().sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     }
   },
   add(input: NewClassInput): TradingClass {
