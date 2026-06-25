@@ -1,6 +1,6 @@
 import { UploadForm } from "@/components/UploadForm";
 
-export const metadata = { title: "Subir clase — Hurtado Trader Academy" };
+export const metadata = { title: "Subir clase — TradeX Center" };
 
 export default function SubirPage() {
   return (

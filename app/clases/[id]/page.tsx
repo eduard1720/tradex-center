@@ -3,14 +3,15 @@ import { notFound } from "next/navigation";
 import {
   Clock,
   BarChart3,
-  CheckCircle2,
   PlayCircle,
   Share2,
   Bookmark,
   Download,
   ArrowLeft,
+  Layers,
 } from "lucide-react";
 import { getAllClasses, getClassById } from "@/lib/data";
+import { CompleteButton } from "@/components/CompleteButton";
 import type { TradingClass } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +32,11 @@ export default async function ClassDetailPage({
   if (!cls) notFound();
 
   const all = await getAllClasses();
-  const playlist = all.filter((c) => c.id !== cls.id).slice(0, 6);
+  // Clases del mismo módulo (la "ruta" de esta clase), en orden.
+  const sameModule = all
+    .filter((c) => c.module === cls.module && c.id !== cls.id)
+    .sort((a, b) => a.order - b.order);
+  const playlist = (sameModule.length ? sameModule : all.filter((c) => c.id !== cls.id)).slice(0, 6);
 
   return (
     <div className="space-y-5 animate-fade-up">
@@ -62,6 +67,12 @@ export default async function ClassDetailPage({
               <span className="rounded-full border border-line bg-card-soft px-2.5 py-1 text-xs text-muted">
                 {cls.category}
               </span>
+              {cls.module > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
+                  <Layers className="h-3.5 w-3.5" /> Módulo {cls.module}
+                  {cls.moduleTitle ? ` · ${cls.moduleTitle}` : ""}
+                </span>
+              )}
               <span className={`rounded-md border px-2 py-0.5 text-xs font-medium ${levelTone[cls.level]}`}>
                 {cls.level}
               </span>
@@ -81,13 +92,13 @@ export default async function ClassDetailPage({
                 </span>
                 <div className="leading-tight">
                   <p className="text-sm font-medium text-white">{cls.instructor}</p>
-                  <p className="text-xs text-muted">Instructor · Hurtado Trader</p>
+                  <p className="text-xs text-muted">Instructor · TradeX Center</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button className="btn-ghost"><Bookmark className="h-4 w-4" /> Guardar</button>
                 <button className="btn-ghost"><Share2 className="h-4 w-4" /> Compartir</button>
-                <button className="btn-primary"><CheckCircle2 className="h-4 w-4" /> Marcar vista</button>
+                <CompleteButton classId={cls.id} />
               </div>
             </div>
 
@@ -115,7 +126,7 @@ export default async function ClassDetailPage({
         <div className="space-y-4">
           <div className="card p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-white">Siguiente en tu ruta</h2>
+              <h2 className="text-sm font-semibold text-white">Siguiente en el módulo</h2>
               <span className="text-xs text-muted">{playlist.length} clases</span>
             </div>
             <div className="flex flex-col gap-1">
@@ -127,7 +138,7 @@ export default async function ClassDetailPage({
               href="/clases"
               className="mt-3 block rounded-xl border border-line py-2.5 text-center text-sm text-muted hover:text-white"
             >
-              Ver toda la biblioteca
+              Ver todos los módulos
             </Link>
           </div>
         </div>

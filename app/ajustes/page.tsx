@@ -1,6 +1,6 @@
 import { User, Bell, Shield, Palette } from "lucide-react";
 
-export const metadata = { title: "Ajustes — Hurtado Trader Academy" };
+export const metadata = { title: "Ajustes — TradeX Center" };
 
 function Toggle({ on = false }: { on?: boolean }) {
   return (

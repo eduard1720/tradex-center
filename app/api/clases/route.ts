@@ -7,7 +7,17 @@ export async function GET() {
   return NextResponse.json({ classes: await getAllClasses() });
 }
 
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "angel-admin";
+
 export async function POST(req: Request) {
+  // Solo Angel (administrador) puede subir clases.
+  if (req.headers.get("x-admin-password") !== ADMIN_PASSWORD) {
+    return NextResponse.json(
+      { error: "Acceso denegado. Clave de administrador incorrecta." },
+      { status: 401 }
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -22,6 +32,8 @@ export async function POST(req: Request) {
   const level = String(body.level ?? "") as Level;
   const instructor = String(body.instructor ?? "Angel Hurtado").trim() || "Angel Hurtado";
   const durationMin = Math.max(1, Math.round(Number(body.durationMin) || 0));
+  const moduleNum = Math.max(0, Math.round(Number(body.module) || 0));
+  const moduleTitle = String(body.moduleTitle ?? "").trim();
   const tags = Array.isArray(body.tags)
     ? (body.tags as unknown[]).map((t) => String(t).trim()).filter(Boolean)
     : String(body.tags ?? "")
@@ -52,6 +64,8 @@ export async function POST(req: Request) {
       instructor,
       durationMin,
       tags,
+      module: moduleNum,
+      moduleTitle,
     });
     return NextResponse.json({ class: created }, { status: 201 });
   } catch (err) {

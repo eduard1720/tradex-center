@@ -2,7 +2,7 @@ import { Sparkles, TrendingUp, AlertTriangle, Brain, ArrowUpRight } from "lucide
 import { Sparkline } from "@/components/Sparkline";
 import { COINS } from "@/lib/mock";
 
-export const metadata = { title: "Análisis IA — Hurtado Trader Academy" };
+export const metadata = { title: "Análisis IA — TradeX Center" };
 
 const INSIGHTS = [
   {

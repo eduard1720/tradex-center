@@ -1,6 +1,6 @@
 import { LifeBuoy, Mail, MessageCircle, BookOpen } from "lucide-react";
 
-export const metadata = { title: "Ayuda — Hurtado Trader Academy" };
+export const metadata = { title: "Ayuda — TradeX Center" };
 
 const FAQS = [
   {

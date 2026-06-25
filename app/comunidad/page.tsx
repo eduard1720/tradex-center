@@ -1,6 +1,7 @@
-import { MessageCircle, Trophy, Users, Pin, Heart } from "lucide-react";
+import { MessageCircle, Trophy, Users, Pin, Heart, ArrowUpRight } from "lucide-react";
+import { SITE } from "@/lib/site";
 
-export const metadata = { title: "Comunidad — Hurtado Trader Academy" };
+export const metadata = { title: "Comunidad — TradeX Center" };
 
 const LEADERS = [
   { name: "María G.", pts: 4820, you: false },
@@ -24,6 +25,30 @@ export default function ComunidadPage() {
         <p className="text-sm text-muted">Aprende en compañía</p>
         <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Comunidad</h1>
       </div>
+
+      {/* Unirse al grupo de WhatsApp */}
+      <a
+        href={SITE.whatsappGroup}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="card group relative flex flex-wrap items-center justify-between gap-4 overflow-hidden p-6 transition-colors hover:border-brand/40"
+      >
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand/20 blur-3xl" />
+        <div className="flex items-center gap-4">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-brand text-black shadow-glow">
+            <MessageCircle className="h-7 w-7" />
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold text-white">Únete al grupo de WhatsApp</h2>
+            <p className="mt-0.5 text-sm text-muted">
+              Comparte ideas, recibe avisos de clases en vivo y resuelve dudas con Angel y la comunidad.
+            </p>
+          </div>
+        </div>
+        <span className="btn-primary shrink-0">
+          Entrar al grupo <ArrowUpRight className="h-4 w-4" />
+        </span>
+      </a>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[

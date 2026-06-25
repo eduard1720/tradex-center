@@ -44,6 +44,7 @@ Sigue estos 3 bloques en orden. La primera vez toma ~10 minutos.
    |------|-------|
    | `SUPABASE_URL` | tu Project URL |
    | `SUPABASE_SERVICE_ROLE_KEY` | tu service_role key |
+   | `ADMIN_PASSWORD` | clave secreta para que solo Angel suba clases |
 
 4. Pulsa **Deploy**. En ~1–2 min tendrás tu URL pública
    (ej. `https://hurtado-trader.vercel.app`).
