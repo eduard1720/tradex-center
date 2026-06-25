@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Radio, Check, MessageCircle } from "lucide-react";
+import { ArrowUpRight, Radio, Check, MessageCircle, Quote, Star } from "lucide-react";
 import { ClassCard } from "@/components/ClassCard";
 import { SocialLinks } from "@/components/SocialLinks";
 import { getAllClasses } from "@/lib/data";
@@ -114,6 +114,33 @@ export default async function DashboardPage() {
           Ver clases en vivo <ArrowUpRight className="h-4 w-4" />
         </span>
       </Link>
+
+      {/* Testimonios de alumnos */}
+      <div className="space-y-4">
+        <div>
+          <p className="inline-flex items-center gap-1.5 text-sm text-brand">
+            <Star className="h-4 w-4 fill-brand" /> Historias de alumnos
+          </p>
+          <h2 className="text-lg font-semibold text-white">Lo que dicen de Angel</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {SITE.testimonials.map((t) => (
+            <div key={t.name} className="card relative p-6">
+              <Quote className="absolute right-5 top-5 h-8 w-8 text-brand/15" />
+              <p className="text-sm leading-relaxed text-white/90">“{t.text}”</p>
+              <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-brand/20 text-sm font-bold text-brand">
+                  {t.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                </span>
+                <div className="leading-tight">
+                  <p className="text-sm font-medium text-white">{t.name}</p>
+                  <p className="text-xs text-muted">{t.role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Clases recientes */}
       <div className="space-y-4">
