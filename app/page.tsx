@@ -1,16 +1,5 @@
 import Link from "next/link";
-import {
-  Trophy,
-  Clock3,
-  Flame,
-  GraduationCap,
-  ArrowUpRight,
-  Radio,
-  Check,
-  MessageCircle,
-  DollarSign,
-} from "lucide-react";
-import { StatCard } from "@/components/StatCard";
+import { ArrowUpRight, Radio, Check, MessageCircle } from "lucide-react";
 import { ClassCard } from "@/components/ClassCard";
 import { SocialLinks } from "@/components/SocialLinks";
 import { getAllClasses } from "@/lib/data";
@@ -104,30 +93,13 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Accesos directos: cambio paralelo + clases en vivo */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <Link
-          href="/dolar"
-          className="card group relative overflow-hidden p-5 transition-colors hover:border-pos/40"
-        >
-          <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-pos/20 blur-2xl" />
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-pos/15 px-2.5 py-1 text-xs font-medium text-pos">
-            <DollarSign className="h-3.5 w-3.5" /> Cambio paralelo
-          </span>
-          <h3 className="mt-3 text-base font-semibold text-white">Dólar blue de Bolivia</h3>
-          <p className="mt-1 text-xs text-muted">
-            Cotización del paralelo en vivo y su evolución.
-          </p>
-          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-pos">
-            Ver cotización <ArrowUpRight className="h-4 w-4" />
-          </span>
-        </Link>
-
-        <Link
-          href="/en-vivo"
-          className="card group relative overflow-hidden p-5 transition-colors hover:border-brand/40"
-        >
-          <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand/20 blur-2xl" />
+      {/* Acceso a clases en vivo */}
+      <Link
+        href="/en-vivo"
+        className="card group relative flex flex-wrap items-center justify-between gap-4 overflow-hidden p-5 transition-colors hover:border-brand/40"
+      >
+        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand/20 blur-2xl" />
+        <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-neg/15 px-2.5 py-1 text-xs font-medium text-neg">
             <Radio className="h-3.5 w-3.5" /> Próxima en vivo
           </span>
@@ -135,21 +107,13 @@ export default async function DashboardPage() {
             {live ? live.title : "Sesiones en directo con Angel"}
           </h3>
           <p className="mt-1 text-xs text-muted">
-            Reserva tu lugar para la sesión semanal con Angel.
+            Reserva tu lugar para la próxima sesión con Angel.
           </p>
-          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand">
-            Ver clases en vivo <ArrowUpRight className="h-4 w-4" />
-          </span>
-        </Link>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={GraduationCap} label="Clases completadas" value="24" delta="+3" />
-        <StatCard icon={Clock3} label="Horas de estudio" value="38.5h" delta="+5.2h" />
-        <StatCard icon={Flame} label="Racha actual" value="6 días" delta="🔥" />
-        <StatCard icon={Trophy} label="Ranking comunidad" value="#142" delta="+18" />
-      </div>
+        </div>
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-brand">
+          Ver clases en vivo <ArrowUpRight className="h-4 w-4" />
+        </span>
+      </Link>
 
       {/* Clases recientes */}
       <div className="space-y-4">

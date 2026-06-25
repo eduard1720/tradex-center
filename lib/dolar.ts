@@ -70,14 +70,17 @@ export async function getParallelUSD(): Promise<ParallelRate | null> {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Histórico: guarda una foto diaria en Supabase y devuelve la evolución.    */
-/*  El gráfico se construye día a día (requiere la tabla `dolar_history`).    */
+/*  Histórico: guarda snapshots intradía en Supabase y devuelve la evolución. */
+/*  Requiere la tabla `dolar_snapshots`. Inserta como máximo 1 punto cada     */
+/*  ~10 minutos, así la curva se construye a lo largo del día.                */
 /* -------------------------------------------------------------------------- */
 
 export interface RatePoint {
-  date: string;
+  ts: string;
   avg: number;
 }
+
+const SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000; // 10 minutos
 
 export async function recordAndGetHistory(
   rate: ParallelRate | null
@@ -85,23 +88,30 @@ export async function recordAndGetHistory(
   if (!hasSupabase()) return [];
   try {
     const sb = getSupabase();
+
     if (rate) {
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-      await sb
-        .from("dolar_history")
-        .upsert(
-          { date: today, buy: rate.buy, sell: rate.sell, avg: rate.avg },
-          { onConflict: "date" }
-        );
+      // ¿el último snapshot tiene más de 10 minutos? Entonces guarda uno nuevo.
+      const { data: lastRows } = await sb
+        .from("dolar_snapshots")
+        .select("ts")
+        .order("ts", { ascending: false })
+        .limit(1);
+      const lastTs = lastRows?.[0]?.ts ? new Date(lastRows[0].ts as string).getTime() : 0;
+      if (Date.now() - lastTs > SNAPSHOT_INTERVAL_MS) {
+        await sb
+          .from("dolar_snapshots")
+          .insert({ buy: rate.buy, sell: rate.sell, avg: rate.avg });
+      }
     }
+
     const { data, error } = await sb
-      .from("dolar_history")
-      .select("date, avg")
-      .order("date", { ascending: false })
-      .limit(60);
+      .from("dolar_snapshots")
+      .select("ts, avg")
+      .order("ts", { ascending: false })
+      .limit(72);
     if (error || !data) return [];
-    return (data as { date: string; avg: number }[])
-      .map((d) => ({ date: d.date, avg: Number(d.avg) }))
+    return (data as { ts: string; avg: number }[])
+      .map((d) => ({ ts: d.ts, avg: Number(d.avg) }))
       .reverse(); // del más antiguo al más reciente
   } catch {
     return [];

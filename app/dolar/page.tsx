@@ -8,10 +8,12 @@ export const dynamic = "force-dynamic";
 // Tipo de cambio oficial fijo de Bolivia (referencia).
 const OFICIAL = 6.96;
 
-function formatDay(date: string): string {
-  return new Date(date + "T00:00:00").toLocaleDateString("es-BO", {
+function formatTs(ts: string): string {
+  return new Date(ts).toLocaleString("es-BO", {
     day: "numeric",
     month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -93,8 +95,8 @@ export default async function DolarPage() {
           <>
             <AreaChart data={series} height={220} />
             <div className="mt-2 flex justify-between text-[11px] text-muted">
-              <span>{formatDay(history[0].date)}</span>
-              <span>{formatDay(history[history.length - 1].date)}</span>
+              <span>{formatTs(history[0].ts)}</span>
+              <span>{formatTs(history[history.length - 1].ts)}</span>
             </div>
           </>
         ) : (

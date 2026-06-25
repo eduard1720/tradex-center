@@ -24,7 +24,7 @@ export function EconomicCalendar() {
     script.async = true;
     script.innerHTML = JSON.stringify({
       colorTheme: "dark",
-      isTransparent: true,
+      isTransparent: false,
       locale: "es",
       countryFilter: "us,eu,gb,jp,ca,au,cn,bo,ar",
       importanceFilter: "0,1",

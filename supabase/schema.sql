@@ -34,18 +34,36 @@ create policy "Lectura publica de clases"
   using (true);
 
 -- ---------------------------------------------------------------------------
--- Histórico del dólar paralelo (se llena solo, una fila por día).
+-- Histórico del dólar paralelo (snapshots intradía, ~1 cada 10 min).
 -- ---------------------------------------------------------------------------
-create table if not exists public.dolar_history (
-  date date primary key,
+create table if not exists public.dolar_snapshots (
+  id   bigserial primary key,
+  ts   timestamptz not null default now(),
   buy  numeric not null,
   sell numeric not null,
   avg  numeric not null
 );
-alter table public.dolar_history enable row level security;
-drop policy if exists "Lectura publica dolar" on public.dolar_history;
+create index if not exists dolar_snapshots_ts_idx on public.dolar_snapshots (ts desc);
+alter table public.dolar_snapshots enable row level security;
+drop policy if exists "Lectura publica dolar" on public.dolar_snapshots;
 create policy "Lectura publica dolar"
-  on public.dolar_history for select
+  on public.dolar_snapshots for select
+  using (true);
+
+-- ---------------------------------------------------------------------------
+-- Clases en vivo programadas por Angel (modo admin).
+-- ---------------------------------------------------------------------------
+create table if not exists public.live_sessions (
+  id         bigserial primary key,
+  title      text not null,
+  starts_at  timestamptz not null,
+  link       text not null default '',
+  created_at timestamptz not null default now()
+);
+alter table public.live_sessions enable row level security;
+drop policy if exists "Lectura publica en vivo" on public.live_sessions;
+create policy "Lectura publica en vivo"
+  on public.live_sessions for select
   using (true);
 
 -- ---------------------------------------------------------------------------
