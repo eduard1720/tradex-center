@@ -220,6 +220,52 @@ function classToRow(c: TradingClass): Row {
   };
 }
 
+export type ClassPatch = Partial<
+  Pick<
+    TradingClass,
+    | "title"
+    | "description"
+    | "category"
+    | "level"
+    | "durationMin"
+    | "module"
+    | "moduleTitle"
+    | "tags"
+    | "videoUrl"
+  >
+>;
+
+/** Aplica un patch (con re-derivado del video si cambia videoUrl). */
+function applyPatch(cur: TradingClass, patch: ClassPatch): TradingClass {
+  const next: TradingClass = { ...cur, ...patch };
+  if (patch.videoUrl !== undefined) {
+    const p = parseVideo(patch.videoUrl);
+    next.embedUrl = p.embedUrl;
+    next.thumbnail = p.thumbnail;
+  }
+  return next;
+}
+
+/** Convierte un patch a columnas de Supabase (solo las definidas). */
+function patchToRow(patch: ClassPatch): Record<string, unknown> {
+  const upd: Record<string, unknown> = {};
+  if (patch.title !== undefined) upd.title = patch.title;
+  if (patch.description !== undefined) upd.description = patch.description;
+  if (patch.category !== undefined) upd.category = patch.category;
+  if (patch.level !== undefined) upd.level = patch.level;
+  if (patch.durationMin !== undefined) upd.duration_min = patch.durationMin;
+  if (patch.module !== undefined) upd.module = patch.module;
+  if (patch.moduleTitle !== undefined) upd.module_title = patch.moduleTitle;
+  if (patch.tags !== undefined) upd.tags = patch.tags;
+  if (patch.videoUrl !== undefined) {
+    const p = parseVideo(patch.videoUrl);
+    upd.video_url = patch.videoUrl;
+    upd.embed_url = p.embedUrl;
+    upd.thumbnail = p.thumbnail;
+  }
+  return upd;
+}
+
 const sb = {
   async getAll(): Promise<TradingClass[]> {
     const { data, error } = await getSupabase()
@@ -244,6 +290,26 @@ const sb = {
     const { error } = await getSupabase().from("classes").insert(classToRow(entry));
     if (error) throw new Error(error.message);
     return entry;
+  },
+  async update(id: string, patch: ClassPatch): Promise<void> {
+    const upd = patchToRow(patch);
+    const { error } = await getSupabase().from("classes").update(upd).eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+  async remove(id: string): Promise<void> {
+    const { error } = await getSupabase().from("classes").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+  async renameModule(module: number, title: string): Promise<void> {
+    const { error } = await getSupabase()
+      .from("classes")
+      .update({ module_title: title })
+      .eq("module", module);
+    if (error) throw new Error(error.message);
+  },
+  async removeModule(module: number): Promise<void> {
+    const { error } = await getSupabase().from("classes").delete().eq("module", module);
+    if (error) throw new Error(error.message);
   },
 };
 
@@ -287,6 +353,31 @@ const json = {
     fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), "utf-8");
     return entry;
   },
+  update(id: string, patch: ClassPatch): void {
+    ensureFile();
+    const list = json.getAll();
+    const i = list.findIndex((c) => c.id === id);
+    if (i < 0) return;
+    list[i] = applyPatch(list[i], patch);
+    fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), "utf-8");
+  },
+  remove(id: string): void {
+    ensureFile();
+    const list = json.getAll().filter((c) => c.id !== id);
+    fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), "utf-8");
+  },
+  renameModule(module: number, title: string): void {
+    ensureFile();
+    const list = json
+      .getAll()
+      .map((c) => (c.module === module ? { ...c, moduleTitle: title } : c));
+    fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), "utf-8");
+  },
+  removeModule(module: number): void {
+    ensureFile();
+    const list = json.getAll().filter((c) => c.module !== module);
+    fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), "utf-8");
+  },
 };
 
 /* -------------------------------------------------------------------------- */
@@ -304,6 +395,26 @@ export async function getClassById(id: string): Promise<TradingClass | undefined
 
 export async function addClass(input: NewClassInput): Promise<TradingClass> {
   return hasSupabase() ? sb.add(input) : json.add(input);
+}
+
+export async function updateClass(id: string, patch: ClassPatch): Promise<void> {
+  if (hasSupabase()) await sb.update(id, patch);
+  else json.update(id, patch);
+}
+
+export async function deleteClass(id: string): Promise<void> {
+  if (hasSupabase()) await sb.remove(id);
+  else json.remove(id);
+}
+
+export async function renameModule(module: number, title: string): Promise<void> {
+  if (hasSupabase()) await sb.renameModule(module, title);
+  else json.renameModule(module, title);
+}
+
+export async function deleteModule(module: number): Promise<void> {
+  if (hasSupabase()) await sb.removeModule(module);
+  else json.removeModule(module);
 }
 
 /** Exposed so a seed script / SQL generator can reuse the same demo data. */

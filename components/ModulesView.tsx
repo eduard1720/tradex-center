@@ -2,15 +2,20 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Lock,
   CheckCircle2,
   PlayCircle,
   Clock,
   ChevronRight,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import type { TradingClass } from "@/lib/types";
 import { getCompleted, onProgressChange } from "@/lib/progress";
+import { useAdmin, getAdminPw } from "@/lib/admin";
+import { ClassEditModal } from "@/components/ClassEditModal";
 
 interface ModuleGroup {
   module: number;
@@ -36,6 +41,9 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
   const modules = useMemo(() => buildModules(classes), [classes]);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [ready, setReady] = useState(false);
+  const isAdmin = useAdmin();
+  const router = useRouter();
+  const [editing, setEditing] = useState<TradingClass | null>(null);
 
   useEffect(() => {
     const sync = () => setCompleted(getCompleted());
@@ -45,6 +53,35 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
   }, []);
 
   const moduleDone = (g: ModuleGroup) => g.lessons.every((l) => completed.has(l.id));
+
+  async function deleteLesson(id: string) {
+    if (!window.confirm("¿Eliminar esta clase? No se puede deshacer.")) return;
+    await fetch(`/api/clases?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: { "x-admin-password": getAdminPw() ?? "" },
+    });
+    router.refresh();
+  }
+
+  async function renameModuleHandler(module: number, current: string) {
+    const title = window.prompt("Nuevo nombre del módulo:", current);
+    if (!title || !title.trim()) return;
+    await fetch("/api/modulos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "x-admin-password": getAdminPw() ?? "" },
+      body: JSON.stringify({ module, title: title.trim() }),
+    });
+    router.refresh();
+  }
+
+  async function deleteModuleHandler(module: number) {
+    if (!window.confirm(`¿Eliminar el Módulo ${module} y TODAS sus clases? No se puede deshacer.`)) return;
+    await fetch(`/api/modulos?module=${module}`, {
+      method: "DELETE",
+      headers: { "x-admin-password": getAdminPw() ?? "" },
+    });
+    router.refresh();
+  }
 
   if (modules.length === 0) {
     return (
@@ -58,7 +95,8 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
     <div className="space-y-5">
       {modules.map((g, mi) => {
         // Un módulo se desbloquea cuando el anterior está completo.
-        const moduleUnlocked = mi === 0 || moduleDone(modules[mi - 1]);
+        // En modo admin todo está desbloqueado para poder gestionarlo.
+        const moduleUnlocked = isAdmin || mi === 0 || moduleDone(modules[mi - 1]);
         const doneCount = g.lessons.filter((l) => completed.has(l.id)).length;
         const pct = Math.round((doneCount / g.lessons.length) * 100);
 
@@ -78,18 +116,36 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
                   {moduleUnlocked ? g.module : <Lock className="h-5 w-5" />}
                 </span>
                 <div>
-                  <p className="text-[11px] uppercase tracking-wider text-muted">
-                    Módulo {g.module}
-                  </p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted">Módulo {g.module}</p>
                   <h3 className="text-base font-semibold text-white">{g.title}</h3>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-white">
-                  {doneCount}/{g.lessons.length} clases
-                </p>
-                <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-card-soft">
-                  <span className="block h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+              <div className="flex items-center gap-3">
+                {isAdmin && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => renameModuleHandler(g.module, g.title)}
+                      title="Renombrar módulo"
+                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:text-white"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => deleteModuleHandler(g.module)}
+                      title="Eliminar módulo"
+                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:border-neg/40 hover:text-neg"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+                <div className="text-right">
+                  <p className="text-sm font-medium text-white">
+                    {doneCount}/{g.lessons.length} clases
+                  </p>
+                  <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-card-soft">
+                    <span className="block h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -106,20 +162,38 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
             <ul className="divide-y divide-line">
               {g.lessons.map((lesson, li) => {
                 const isDone = completed.has(lesson.id);
-                // La clase se desbloquea si el módulo está abierto y la clase
-                // anterior del módulo ya fue completada (la 1ª siempre abre).
                 const prevDone = li === 0 || completed.has(g.lessons[li - 1].id);
-                const unlocked = moduleUnlocked && prevDone;
+                const unlocked = moduleUnlocked && (isAdmin || prevDone);
 
                 return (
-                  <li key={lesson.id}>
-                    <LessonRow
-                      lesson={lesson}
-                      index={li + 1}
-                      done={isDone}
-                      unlocked={unlocked}
-                      ready={ready}
-                    />
+                  <li key={lesson.id} className="flex items-center">
+                    <div className="min-w-0 flex-1">
+                      <LessonRow
+                        lesson={lesson}
+                        index={li + 1}
+                        done={isDone}
+                        unlocked={unlocked}
+                        ready={ready}
+                      />
+                    </div>
+                    {isAdmin && (
+                      <div className="flex items-center gap-1 pr-4">
+                        <button
+                          onClick={() => setEditing(lesson)}
+                          title="Editar clase"
+                          className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:text-white"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => deleteLesson(lesson.id)}
+                          title="Eliminar clase"
+                          className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:border-neg/40 hover:text-neg"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -127,6 +201,17 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
           </div>
         );
       })}
+
+      {editing && (
+        <ClassEditModal
+          cls={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

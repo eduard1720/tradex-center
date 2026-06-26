@@ -4,7 +4,6 @@ import {
   Clock,
   BarChart3,
   PlayCircle,
-  Share2,
   Bookmark,
   Download,
   ArrowLeft,
@@ -95,7 +94,6 @@ export default async function ClassDetailPage({
               </div>
               <div className="flex items-center gap-2">
                 <button className="btn-ghost"><Bookmark className="h-4 w-4" /> Guardar</button>
-                <button className="btn-ghost"><Share2 className="h-4 w-4" /> Compartir</button>
               </div>
             </div>
 

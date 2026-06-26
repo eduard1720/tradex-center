@@ -26,8 +26,8 @@ export function EconomicCalendar() {
       colorTheme: "dark",
       isTransparent: false,
       locale: "es",
-      countryFilter: "us,eu,gb,jp,ca,au,cn,bo,ar",
-      importanceFilter: "0,1",
+      countryFilter: "us", // solo noticias de Estados Unidos (dólar)
+      importanceFilter: "-1,0,1",
       width: "100%",
       height: 680,
     });

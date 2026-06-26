@@ -67,6 +67,29 @@ create policy "Lectura publica en vivo"
   using (true);
 
 -- ---------------------------------------------------------------------------
+-- Herramientas: archivos (PDF, diapositivas, libros…) que sube Angel.
+-- ---------------------------------------------------------------------------
+create table if not exists public.resources (
+  id         bigserial primary key,
+  title      text not null,
+  file_name  text not null,
+  file_url   text not null,
+  path       text not null,
+  kind       text not null default 'file',
+  created_at timestamptz not null default now()
+);
+alter table public.resources enable row level security;
+drop policy if exists "Lectura publica recursos" on public.resources;
+create policy "Lectura publica recursos"
+  on public.resources for select
+  using (true);
+
+-- Bucket de Storage público donde se guardan los archivos de Herramientas.
+insert into storage.buckets (id, name, public)
+values ('herramientas', 'herramientas', true)
+on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
 -- Datos de demostración (8 clases en módulos). Cámbialos o bórralos cuando quieras.
 -- ---------------------------------------------------------------------------
 insert into public.classes
