@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------------- */
 /*  Tipo de cambio paralelo (dólar blue) — Bolivia                            */
-/*  Fuente: mercado P2P de Binance (USDT/BOB), referencia real del paralelo.  */
+/*  Fuente: CriptoYa (agrega varios exchanges USDT/BOB); respaldo: Binance.   */
 /* -------------------------------------------------------------------------- */
 
 import { hasSupabase, getSupabase } from "./supabase";
@@ -16,8 +16,51 @@ export interface ParallelRate {
   updatedAt: string;
 }
 
-const P2P_URL =
-  "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search";
+const r2 = (n: number) => Number(n.toFixed(2));
+const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+
+/* --- Fuente principal: CriptoYa (varios exchanges) ----------------------- */
+interface CriptoyaQuote {
+  ask?: number;
+  bid?: number;
+  totalAsk?: number;
+  totalBid?: number;
+}
+
+async function fromCriptoya(): Promise<ParallelRate | null> {
+  try {
+    const res = await fetch("https://criptoya.com/api/usdt/bob/1", {
+      next: { revalidate: 600 }, // cachea 10 min
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Record<string, CriptoyaQuote>;
+    const quotes = Object.values(json).filter(
+      (q) => q && typeof q === "object" && (q.ask || q.bid)
+    );
+    const asks = quotes
+      .map((q) => Number(q.totalAsk ?? q.ask))
+      .filter((n) => Number.isFinite(n) && n > 1 && n < 50);
+    const bids = quotes
+      .map((q) => Number(q.totalBid ?? q.bid))
+      .filter((n) => Number.isFinite(n) && n > 1 && n < 50);
+    if (asks.length === 0 || bids.length === 0) return null;
+
+    const sell = avg(asks); // comprar dólares (lo que pagas)
+    const buy = avg(bids); // vender dólares (lo que te dan)
+    return {
+      buy: r2(buy),
+      sell: r2(sell),
+      avg: r2((buy + sell) / 2),
+      source: "CriptoYa (USDT/BOB)",
+      updatedAt: new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/* --- Respaldo: Binance P2P ------------------------------------------------ */
+const P2P_URL = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search";
 
 async function p2pAverage(tradeType: "BUY" | "SELL"): Promise<number | null> {
   try {
@@ -33,40 +76,49 @@ async function p2pAverage(tradeType: "BUY" | "SELL"): Promise<number | null> {
         payTypes: [],
         publisherType: null,
       }),
-      // Cachea 10 minutos para no golpear la API en cada visita.
       next: { revalidate: 600 },
     });
     if (!res.ok) return null;
-    const json = (await res.json()) as {
-      data?: { adv?: { price?: string } }[];
-    };
+    const json = (await res.json()) as { data?: { adv?: { price?: string } }[] };
     const prices = (json.data ?? [])
       .map((d) => Number(d.adv?.price))
       .filter((n) => Number.isFinite(n) && n > 0);
     if (prices.length === 0) return null;
-    return prices.reduce((a, b) => a + b, 0) / prices.length;
+    return avg(prices);
   } catch {
     return null;
   }
 }
 
-/** Devuelve el paralelo Bolivia, o null si la fuente no está disponible. */
-export async function getParallelUSD(): Promise<ParallelRate | null> {
-  const [sell, buy] = await Promise.all([
-    p2pAverage("SELL"), // anuncios que VENDEN USDT → precio para comprar dólares
-    p2pAverage("BUY"), // anuncios que COMPRAN USDT → precio para vender dólares
-  ]);
-  if (sell == null && buy == null) return null;
-
-  const b = buy ?? sell!;
-  const s = sell ?? buy!;
+async function fromBinance(): Promise<ParallelRate | null> {
+  const [sellAds, buyAds] = await Promise.all([p2pAverage("SELL"), p2pAverage("BUY")]);
+  if (sellAds == null && buyAds == null) return null;
+  const buyDollar = sellAds ?? buyAds!;
+  const sellDollar = buyAds ?? sellAds!;
   return {
-    buy: Number(s.toFixed(2)),
-    sell: Number(b.toFixed(2)),
-    avg: Number(((b + s) / 2).toFixed(2)),
+    buy: r2(buyDollar),
+    sell: r2(sellDollar),
+    avg: r2((buyDollar + sellDollar) / 2),
     source: "Binance P2P (USDT/BOB)",
     updatedAt: new Date().toISOString(),
   };
+}
+
+/** Devuelve el paralelo Bolivia (CriptoYa, con respaldo a Binance). */
+export async function getParallelUSD(): Promise<ParallelRate | null> {
+  return (await fromCriptoya()) ?? (await fromBinance());
+}
+
+/** Guarda un snapshot sin throttling (lo usa el cron diario). */
+export async function recordSnapshot(rate: ParallelRate | null): Promise<void> {
+  if (!hasSupabase() || !rate) return;
+  try {
+    await getSupabase()
+      .from("dolar_snapshots")
+      .insert({ buy: rate.buy, sell: rate.sell, avg: rate.avg });
+  } catch {
+    /* noop */
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -80,7 +132,7 @@ export interface RatePoint {
   avg: number;
 }
 
-const SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000; // 10 minutos
+const SNAPSHOT_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 horas (curva diaria)
 
 export async function recordAndGetHistory(
   rate: ParallelRate | null
