@@ -9,11 +9,10 @@ export const dynamic = "force-dynamic";
 const OFICIAL = 6.96;
 
 function formatTs(ts: string): string {
-  return new Date(ts).toLocaleString("es-BO", {
+  return new Date(ts).toLocaleDateString("es-BO", {
     day: "numeric",
     month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
+    timeZone: "America/La_Paz",
   });
 }
 
