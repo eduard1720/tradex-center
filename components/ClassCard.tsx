@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Play, Clock, BarChart3 } from "lucide-react";
+import { Play, BarChart3 } from "lucide-react";
 import type { TradingClass } from "@/lib/types";
 
 const levelTone: Record<string, string> = {
@@ -32,9 +32,6 @@ export function ClassCard({ cls, progress }: { cls: TradingClass; progress?: num
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/10" />
         <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
           {cls.category}
-        </span>
-        <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
-          <Clock className="h-3 w-3" /> {cls.durationMin} min
         </span>
         <span className="absolute inset-0 grid place-items-center opacity-0 transition-opacity group-hover:opacity-100">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-brand text-black shadow-glow">

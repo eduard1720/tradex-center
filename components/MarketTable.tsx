@@ -1,30 +1,57 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw, Loader2, AlertCircle } from "lucide-react";
-import { Sparkline } from "@/components/Sparkline";
+import { RefreshCw, Loader2, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
 
-interface CGCoin {
-  id: string;
-  symbol: string;
+/* -------------------------------------------------------------------------- */
+/*  Datos de mercado en vivo desde Binance (API pública, sin clave).          */
+/* -------------------------------------------------------------------------- */
+
+interface Ticker {
+  symbol: string; // par sin USDT (BTC, ETH...)
   name: string;
-  image: string;
-  current_price: number;
-  price_change_percentage_1h_in_currency: number | null;
-  price_change_percentage_24h_in_currency: number | null;
-  price_change_percentage_7d_in_currency: number | null;
-  total_volume: number;
-  market_cap: number;
-  sparkline_in_7d: { price: number[] } | null;
+  price: number;
+  changePct: number;
+  volume: number; // volumen en USDT (quoteVolume)
 }
 
-const API =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=1h%2C24h%2C7d";
+interface BinanceRow {
+  symbol: string;
+  lastPrice: string;
+  priceChangePercent: string;
+  quoteVolume: string;
+}
+
+// Pares a mostrar (todos contra USDT) con su nombre legible.
+const PAIRS: { symbol: string; name: string }[] = [
+  { symbol: "BTC", name: "Bitcoin" },
+  { symbol: "ETH", name: "Ethereum" },
+  { symbol: "BNB", name: "BNB" },
+  { symbol: "SOL", name: "Solana" },
+  { symbol: "XRP", name: "XRP" },
+  { symbol: "ADA", name: "Cardano" },
+  { symbol: "DOGE", name: "Dogecoin" },
+  { symbol: "AVAX", name: "Avalanche" },
+  { symbol: "LINK", name: "Chainlink" },
+  { symbol: "DOT", name: "Polkadot" },
+  { symbol: "TRX", name: "TRON" },
+  { symbol: "LTC", name: "Litecoin" },
+  { symbol: "MATIC", name: "Polygon" },
+  { symbol: "ATOM", name: "Cosmos" },
+  { symbol: "NEAR", name: "NEAR" },
+  { symbol: "UNI", name: "Uniswap" },
+];
+
+const NAME_BY_SYMBOL = new Map(PAIRS.map((p) => [`${p.symbol}USDT`, p]));
+
+const SYMBOLS_PARAM = encodeURIComponent(
+  JSON.stringify(PAIRS.map((p) => `${p.symbol}USDT`))
+);
+const API = `https://api.binance.com/api/v3/ticker/24hr?symbols=${SYMBOLS_PARAM}`;
 
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
 
-function pct(n: number | null) {
-  if (n == null) return <span className="text-muted">—</span>;
+function pct(n: number) {
   const positive = n >= 0;
   return (
     <span className={positive ? "text-pos" : "text-neg"}>
@@ -39,7 +66,7 @@ function price(n: number) {
 }
 
 export function MarketTable() {
-  const [coins, setCoins] = useState<CGCoin[]>([]);
+  const [coins, setCoins] = useState<Ticker[]>([]);
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [updated, setUpdated] = useState<Date | null>(null);
 
@@ -47,8 +74,24 @@ export function MarketTable() {
     try {
       const res = await fetch(API, { cache: "no-store" });
       if (!res.ok) throw new Error();
-      const data = (await res.json()) as CGCoin[];
-      setCoins(data);
+      const data = (await res.json()) as BinanceRow[];
+      const mapped: Ticker[] = data.map((r) => {
+        const meta = NAME_BY_SYMBOL.get(r.symbol);
+        return {
+          symbol: meta?.symbol ?? r.symbol.replace("USDT", ""),
+          name: meta?.name ?? r.symbol,
+          price: Number(r.lastPrice),
+          changePct: Number(r.priceChangePercent),
+          volume: Number(r.quoteVolume),
+        };
+      });
+      // Conserva el orden de PAIRS.
+      mapped.sort(
+        (a, b) =>
+          PAIRS.findIndex((p) => p.symbol === a.symbol) -
+          PAIRS.findIndex((p) => p.symbol === b.symbol)
+      );
+      setCoins(mapped);
       setStatus("ok");
       setUpdated(new Date());
     } catch {
@@ -58,17 +101,12 @@ export function MarketTable() {
 
   useEffect(() => {
     load();
-    const id = setInterval(load, 45000); // refresca cada 45 s
+    const id = setInterval(load, 30000); // refresca cada 30 s
     return () => clearInterval(id);
   }, [load]);
 
   const movers = [...coins]
-    .filter((c) => c.price_change_percentage_24h_in_currency != null)
-    .sort(
-      (a, b) =>
-        Math.abs(b.price_change_percentage_24h_in_currency ?? 0) -
-        Math.abs(a.price_change_percentage_24h_in_currency ?? 0)
-    )
+    .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))
     .slice(0, 4);
 
   if (status === "loading") {
@@ -93,7 +131,7 @@ export function MarketTable() {
     <div className="space-y-6">
       <p className="inline-flex items-center gap-1.5 text-xs text-muted">
         <RefreshCw className="h-3.5 w-3.5 text-pos" />
-        En vivo · CoinGecko
+        En vivo · Binance
         {updated && ` · actualizado ${updated.toLocaleTimeString("es-BO")}`}
       </p>
 
@@ -102,26 +140,24 @@ export function MarketTable() {
         <h2 className="mb-3 text-lg font-semibold text-white">Más movidos (24h)</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {movers.map((m) => (
-            <div key={m.id} className="card p-4">
+            <div key={m.symbol} className="card p-4">
               <div className="flex items-center gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={m.image} alt={m.name} className="h-8 w-8 rounded-full" />
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-brand/15 text-[11px] font-bold text-brand">
+                  {m.symbol.slice(0, 3)}
+                </span>
                 <div className="leading-tight">
-                  <p className="text-sm font-semibold text-white">{m.symbol.toUpperCase()}</p>
+                  <p className="text-sm font-semibold text-white">{m.symbol}</p>
                   <p className="text-[11px] text-muted">{m.name}</p>
                 </div>
+                {m.changePct >= 0 ? (
+                  <TrendingUp className="ml-auto h-4 w-4 text-pos" />
+                ) : (
+                  <TrendingDown className="ml-auto h-4 w-4 text-neg" />
+                )}
               </div>
-              <div className="my-2">
-                <Sparkline
-                  data={m.sparkline_in_7d?.price ?? []}
-                  positive={(m.price_change_percentage_24h_in_currency ?? 0) >= 0}
-                  width={220}
-                  height={44}
-                />
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-white">${price(m.current_price)}</span>
-                {pct(m.price_change_percentage_24h_in_currency)}
+              <div className="mt-3 flex items-center justify-between text-sm">
+                <span className="font-medium text-white">${price(m.price)}</span>
+                {pct(m.changePct)}
               </div>
             </div>
           ))}
@@ -131,48 +167,32 @@ export function MarketTable() {
       {/* Tabla */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
+          <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-muted">
-                <th className="px-5 py-3 font-medium">Nombre</th>
+                <th className="px-5 py-3 font-medium">Activo</th>
                 <th className="px-3 py-3 text-right font-medium">Precio</th>
-                <th className="px-3 py-3 text-right font-medium">1h %</th>
                 <th className="px-3 py-3 text-right font-medium">24h %</th>
-                <th className="px-3 py-3 text-right font-medium">7d %</th>
-                <th className="px-3 py-3 text-right font-medium">Volumen (24h)</th>
-                <th className="px-3 py-3 text-right font-medium">Cap. mercado</th>
-                <th className="px-5 py-3 text-right font-medium">Últimos 7d</th>
+                <th className="px-5 py-3 text-right font-medium">Volumen (24h)</th>
               </tr>
             </thead>
             <tbody>
               {coins.map((c) => (
-                <tr key={c.id} className="border-t border-line hover:bg-card-hover/50">
+                <tr key={c.symbol} className="border-t border-line hover:bg-card-hover/50">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={c.image} alt={c.name} className="h-8 w-8 rounded-full" />
+                      <span className="grid h-8 w-8 place-items-center rounded-full bg-brand/15 text-[11px] font-bold text-brand">
+                        {c.symbol.slice(0, 3)}
+                      </span>
                       <div className="leading-tight">
-                        <p className="font-medium text-white">{c.symbol.toUpperCase()}</p>
+                        <p className="font-medium text-white">{c.symbol}</p>
                         <p className="text-[11px] text-muted">{c.name}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-3.5 text-right font-medium text-white">${price(c.current_price)}</td>
-                  <td className="px-3 py-3.5 text-right">{pct(c.price_change_percentage_1h_in_currency)}</td>
-                  <td className="px-3 py-3.5 text-right">{pct(c.price_change_percentage_24h_in_currency)}</td>
-                  <td className="px-3 py-3.5 text-right">{pct(c.price_change_percentage_7d_in_currency)}</td>
-                  <td className="px-3 py-3.5 text-right text-muted">${compact.format(c.total_volume)}</td>
-                  <td className="px-3 py-3.5 text-right text-muted">${compact.format(c.market_cap)}</td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex justify-end">
-                      <Sparkline
-                        data={c.sparkline_in_7d?.price ?? []}
-                        positive={(c.price_change_percentage_7d_in_currency ?? 0) >= 0}
-                        width={120}
-                        height={36}
-                      />
-                    </div>
-                  </td>
+                  <td className="px-3 py-3.5 text-right font-medium text-white">${price(c.price)}</td>
+                  <td className="px-3 py-3.5 text-right">{pct(c.changePct)}</td>
+                  <td className="px-5 py-3.5 text-right text-muted">${compact.format(c.volume)}</td>
                 </tr>
               ))}
             </tbody>

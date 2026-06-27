@@ -1,16 +1,10 @@
 export type Level = "Principiante" | "Intermedio" | "Avanzado";
 
-export type Category =
-  | "Fundamentos"
-  | "Análisis Técnico"
-  | "Price Action"
-  | "Gestión de Riesgo"
-  | "Psicología"
-  | "Cripto"
-  | "Forex"
-  | "En Vivo";
+/** La categoría es texto libre: Angel escribe la que quiera al subir la clase. */
+export type Category = string;
 
-export const CATEGORIES: Category[] = [
+/** Sugerencias de categoría (se ofrecen como autocompletado, no son obligatorias). */
+export const CATEGORIES: string[] = [
   "Fundamentos",
   "Análisis Técnico",
   "Price Action",
@@ -35,7 +29,6 @@ export interface TradingClass {
   embedUrl: string;
   /** Thumbnail derived from the video provider. */
   thumbnail: string;
-  durationMin: number;
   instructor: string;
   tags: string[];
   createdAt: string;

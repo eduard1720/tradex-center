@@ -3,21 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Search, Bell, Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut } from "lucide-react";
 import { Logo } from "./Logo";
-import { useAdmin } from "@/lib/admin";
+import { useAdmin, logoutAdmin } from "@/lib/admin";
+import { useStudent, logoutStudent } from "@/lib/student";
 import { MAIN_NAV, ADMIN_NAV } from "@/lib/nav";
 
-const CHIPS = [
-  { label: "Clases", value: "48", tone: "muted" as const },
-  { label: "Estudiantes", value: "1.2k", tone: "pos" as const },
-  { label: "BTC", value: "$88,248", tone: "pos" as const },
-];
+function initials(name: string): string {
+  return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+}
 
 export function Topbar() {
   const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState(false);
   const pathname = usePathname();
   const isAdmin = useAdmin();
+  const student = useStudent();
+
+  const name = isAdmin ? "Angel H." : student?.name ?? "Alumno";
+
+  function signOut() {
+    if (isAdmin) logoutAdmin();
+    logoutStudent();
+    setMenu(false);
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-bg/70 backdrop-blur-xl">
@@ -34,43 +43,37 @@ export function Topbar() {
           <Logo compact />
         </div>
 
-        {/* Stat chips */}
-        <div className="hidden items-center gap-2 lg:flex">
-          {CHIPS.map((c) => (
-            <span key={c.label} className="chip">
-              <span className="text-muted">{c.label}</span>
-              <span
-                className={
-                  c.tone === "pos" ? "text-pos font-medium" : "text-white font-medium"
-                }
-              >
-                {c.value}
-              </span>
-            </span>
-          ))}
-        </div>
-
         <div className="ml-auto flex items-center gap-2.5">
-          <div className="relative hidden sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <input
-              placeholder="Buscar clases..."
-              className="h-10 w-44 rounded-xl border border-line bg-card-soft pl-9 pr-3 text-sm text-white placeholder:text-muted/70 outline-none focus:border-brand/50 lg:w-64"
-            />
+          <div className="relative">
+            <button
+              onClick={() => setMenu((m) => !m)}
+              className="flex items-center gap-2 rounded-xl border border-line bg-card-soft px-2.5 py-1.5 text-sm"
+            >
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand/20 text-xs font-bold text-brand">
+                {initials(name)}
+              </span>
+              <span className="hidden text-white/90 sm:block">{name}</span>
+              <ChevronDown className="hidden h-4 w-4 text-muted sm:block" />
+            </button>
+
+            {menu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMenu(false)} />
+                <div className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-line bg-bg-soft py-1 shadow-xl">
+                  <p className="px-3 py-2 text-xs text-muted">
+                    {isAdmin ? "Sesión de instructor" : "Sesión de alumno"}
+                  </p>
+                  <div className="h-px bg-line" />
+                  <button
+                    onClick={signOut}
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-white/90 hover:bg-card-hover"
+                  >
+                    <LogOut className="h-4 w-4 text-muted" /> Cerrar sesión
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-
-          <button className="relative grid h-10 w-10 place-items-center rounded-xl border border-line text-muted hover:text-white">
-            <Bell className="h-[18px] w-[18px]" />
-            <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-brand ring-2 ring-bg" />
-          </button>
-
-          <button className="flex items-center gap-2 rounded-xl border border-line bg-card-soft px-2.5 py-1.5 text-sm">
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand/20 text-xs font-bold text-brand">
-              AH
-            </span>
-            <span className="hidden text-white/90 sm:block">Angel H.</span>
-            <ChevronDown className="hidden h-4 w-4 text-muted sm:block" />
-          </button>
         </div>
       </div>
 

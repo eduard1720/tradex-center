@@ -7,7 +7,7 @@ import {
   Lock,
   CheckCircle2,
   PlayCircle,
-  Clock,
+  BarChart3,
   ChevronRight,
   Pencil,
   Trash2,
@@ -258,7 +258,7 @@ function LessonRow({
           {index}. {lesson.title}
         </p>
         <p className="mt-0.5 inline-flex items-center gap-1.5 text-[11px] text-muted">
-          <Clock className="h-3 w-3" /> {lesson.durationMin} min · {lesson.level}
+          <BarChart3 className="h-3 w-3" /> {lesson.level}
           {done && <span className="ml-1 text-pos">· Completada</span>}
         </p>
       </div>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Eye } from "lucide-react";
-import { isCompleted, setCompleted, onProgressChange } from "@/lib/progress";
+import { CheckCircle2, Circle } from "lucide-react";
+import { isCompleted, setCompleted, toggleCompleted, onProgressChange } from "@/lib/progress";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
@@ -39,14 +39,12 @@ export function VideoPlayer({
   videoId,
   embedUrl,
   title,
-  durationMin,
 }: {
   classId: string;
   provider: "youtube" | "vimeo" | "unknown";
   videoId: string | null;
   embedUrl: string;
   title: string;
-  durationMin: number;
 }) {
   // Contenedor que React posee; el nodo del player de YouTube lo creamos y
   // destruimos nosotros para no chocar con el ciclo de vida de React.
@@ -87,16 +85,8 @@ export function VideoPlayer({
       });
     }
 
-    // Red de seguridad: tras la duración de la clase con la página abierta,
-    // se considera vista (por si el evento "ended" no llega).
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (durationMin > 0) {
-      timer = setTimeout(complete, durationMin * 60 * 1000);
-    }
-
     return () => {
       cancelled = true;
-      if (timer) clearTimeout(timer);
       try {
         player?.destroy?.();
       } catch {
@@ -104,7 +94,7 @@ export function VideoPlayer({
       }
       if (wrapRef.current) wrapRef.current.innerHTML = "";
     };
-  }, [classId, provider, videoId, durationMin]);
+  }, [classId, provider, videoId]);
 
   return (
     <div className="space-y-2">
@@ -124,17 +114,33 @@ export function VideoPlayer({
         </div>
       </div>
 
-      <p className={`flex items-center gap-1.5 text-xs ${done ? "text-pos" : "text-muted"}`}>
-        {done ? (
-          <>
-            <CheckCircle2 className="h-3.5 w-3.5" /> Clase completada · siguiente desbloqueada
-          </>
-        ) : (
-          <>
-            <Eye className="h-3.5 w-3.5" /> Mira el video hasta el final para desbloquear la siguiente clase
-          </>
-        )}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className={`flex items-center gap-1.5 text-xs ${done ? "text-pos" : "text-muted"}`}>
+          {done ? (
+            <>
+              <CheckCircle2 className="h-3.5 w-3.5" /> Clase completada · siguiente desbloqueada
+            </>
+          ) : (
+            <>
+              <Circle className="h-3.5 w-3.5" /> Marca la clase como completada al terminar
+            </>
+          )}
+        </p>
+        <button
+          onClick={() => toggleCompleted(classId)}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            done
+              ? "border-pos/40 bg-pos/10 text-pos"
+              : "border-line text-muted hover:text-white"
+          }`}
+        >
+          {done ? (
+            <><CheckCircle2 className="h-4 w-4" /> Completada</>
+          ) : (
+            <><Circle className="h-4 w-4" /> Marcar como completada</>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

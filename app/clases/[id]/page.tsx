@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  Clock,
   BarChart3,
   PlayCircle,
   Bookmark,
@@ -56,7 +55,6 @@ export default async function ClassDetailPage({
             videoId={parseVideo(cls.videoUrl).id}
             embedUrl={cls.embedUrl}
             title={cls.title}
-            durationMin={cls.durationMin}
           />
 
           <div className="card p-5">
@@ -72,9 +70,6 @@ export default async function ClassDetailPage({
               )}
               <span className={`rounded-md border px-2 py-0.5 text-xs font-medium ${levelTone[cls.level]}`}>
                 {cls.level}
-              </span>
-              <span className="inline-flex items-center gap-1 text-xs text-muted">
-                <Clock className="h-3.5 w-3.5" /> {cls.durationMin} min
               </span>
             </div>
 
@@ -160,7 +155,7 @@ function PlaylistRow({ cls, index }: { cls: TradingClass; index: number }) {
           {index}. {cls.title}
         </p>
         <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted">
-          <BarChart3 className="h-3 w-3" /> {cls.level} · {cls.durationMin} min
+          <BarChart3 className="h-3 w-3" /> {cls.level}
         </p>
       </div>
     </Link>

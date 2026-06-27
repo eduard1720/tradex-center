@@ -1,6 +1,19 @@
-import { LifeBuoy, Mail, MessageCircle, BookOpen } from "lucide-react";
+import { LifeBuoy, Mail, MessageCircle, Clock } from "lucide-react";
+import { SITE, waLink } from "@/lib/site";
 
 export const metadata = { title: "Ayuda — TradeX Center" };
+
+// Horario de atención (solo mensajes) con equivalencias por zona horaria.
+const SUPPORT_HOURS = [
+  { zone: "Bolivia · Venezuela", hours: "10:00–11:00 · 13:00–14:00" },
+  { zone: "Colombia · Perú · Ecuador", hours: "09:00–10:00 · 12:00–13:00" },
+  { zone: "México (CDMX)", hours: "08:00–09:00 · 11:00–12:00" },
+  { zone: "Argentina · Chile · Uruguay", hours: "11:00–12:00 · 14:00–15:00" },
+];
+
+const supportUrl = waLink(
+  `Hola Angel, necesito ayuda con la plataforma de ${SITE.name}.`
+);
 
 const FAQS = [
   {
@@ -48,21 +61,36 @@ export default function AyudaPage() {
 
         <div className="space-y-4">
           <div className="card p-5">
-            <h2 className="text-base font-semibold text-white">Contacto</h2>
-            <p className="mt-1 text-sm text-muted">¿Necesitas ayuda directa?</p>
-            <a href="mailto:soporte@hurtadotrader.com" className="btn-ghost mt-3 w-full">
+            <div className="flex items-center gap-2 text-white">
+              <Clock className="h-5 w-5 text-brand" />
+              <h2 className="text-base font-semibold">Horario de atención</h2>
+            </div>
+            <p className="mt-2 text-sm text-muted">
+              Soporte <strong className="text-white/90">solo por mensajes</strong>, todos los días
+              en estas dos franjas:
+            </p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {SUPPORT_HOURS.map((h) => (
+                <li
+                  key={h.zone}
+                  className="flex items-start justify-between gap-3 border-b border-line pb-2 last:border-0"
+                >
+                  <span className="text-muted">{h.zone}</span>
+                  <span className="text-right font-medium text-white">{h.hours}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href={supportUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary mt-4 w-full"
+            >
+              <MessageCircle className="h-4 w-4" /> Escribir por WhatsApp
+            </a>
+            <a href="mailto:soporte@hurtadotrader.com" className="btn-ghost mt-2 w-full">
               <Mail className="h-4 w-4" /> soporte@hurtadotrader.com
             </a>
-            <button className="btn-primary mt-2 w-full">
-              <MessageCircle className="h-4 w-4" /> Chat con soporte
-            </button>
-          </div>
-          <div className="card p-5">
-            <BookOpen className="h-6 w-6 text-brand" />
-            <h2 className="mt-2 text-base font-semibold text-white">Guía de inicio</h2>
-            <p className="mt-1 text-sm text-muted">
-              Aprende a usar la plataforma en 5 minutos.
-            </p>
           </div>
         </div>
       </div>

@@ -34,7 +34,10 @@ export default function RootLayout({
             </main>
             <footer className="border-t border-line px-4 py-6 text-center text-xs text-muted md:px-8">
               © {new Date().getFullYear()} TradeX Center · Hecho para Angel Hurtado ·
-              El trading conlleva riesgo de pérdida de capital.
+              El trading conlleva riesgo de pérdida de capital ·{" "}
+              <a href="/terminos" className="hover:text-white">
+                Términos y condiciones
+              </a>
             </footer>
           </div>
         </div>

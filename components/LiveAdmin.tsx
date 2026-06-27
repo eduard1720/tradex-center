@@ -112,6 +112,10 @@ export function LiveAdmin({ sessions }: { sessions: LiveSession[] }) {
             <><CalendarPlus className="h-4 w-4" /> Programar sesión</>
           )}
         </button>
+        <p className="text-[11px] text-muted">
+          Tras programar o cambiar una clase, usa el botón <strong>“Avisar al grupo”</strong>
+          {" "}(arriba, en la próxima sesión) para notificar a tus alumnos por WhatsApp.
+        </p>
       </form>
 
       {sessions.length > 0 && (

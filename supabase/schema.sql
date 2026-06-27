@@ -24,6 +24,8 @@ create table if not exists public.classes (
 alter table public.classes add column if not exists module       integer not null default 0;
 alter table public.classes add column if not exists module_title text not null default '';
 alter table public.classes add column if not exists lesson_order integer not null default 0;
+-- La duración de clases se eliminó: la columna queda opcional (puede ser null).
+alter table public.classes alter column duration_min drop not null;
 
 -- Seguridad: lectura pública, escritura solo desde el servidor (service role).
 alter table public.classes enable row level security;
@@ -88,6 +90,85 @@ create policy "Lectura publica recursos"
 insert into storage.buckets (id, name, public)
 values ('herramientas', 'herramientas', true)
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Alumnos: cada uno tiene un código de acceso. Angel los da de alta y puede
+-- desactivar (active=false) para revocar el acceso de uno solo.
+-- ---------------------------------------------------------------------------
+create table if not exists public.students (
+  id                bigserial primary key,
+  name              text not null,
+  code              text not null unique,
+  active            boolean not null default true,
+  terms_accepted_at timestamptz,
+  created_at        timestamptz not null default now()
+);
+alter table public.students enable row level security;
+-- Sin políticas de lectura pública: la validación del código se hace en el
+-- servidor con la service role key (login de alumnos).
+
+-- ---------------------------------------------------------------------------
+-- Comentarios de alumnos. Angel modera cuáles se muestran (approved=true).
+-- ---------------------------------------------------------------------------
+create table if not exists public.comments (
+  id          bigserial primary key,
+  student_id  bigint references public.students(id) on delete set null,
+  author_name text not null,
+  body        text not null,
+  approved    boolean not null default false,
+  created_at  timestamptz not null default now()
+);
+create index if not exists comments_created_idx on public.comments (created_at desc);
+alter table public.comments enable row level security;
+drop policy if exists "Lectura publica comentarios aprobados" on public.comments;
+create policy "Lectura publica comentarios aprobados"
+  on public.comments for select
+  using (approved = true);
+
+-- ---------------------------------------------------------------------------
+-- Ajustes del sitio (clave/valor): video de bienvenida, texto de T&C, etc.
+-- ---------------------------------------------------------------------------
+create table if not exists public.settings (
+  key   text primary key,
+  value text not null default ''
+);
+alter table public.settings enable row level security;
+drop policy if exists "Lectura publica ajustes" on public.settings;
+create policy "Lectura publica ajustes"
+  on public.settings for select
+  using (true);
+
+-- ---------------------------------------------------------------------------
+-- Journal de trading: operaciones que registra cada alumno.
+-- ---------------------------------------------------------------------------
+create table if not exists public.journal_entries (
+  id            bigserial primary key,
+  student_id    bigint not null references public.students(id) on delete cascade,
+  entry_date    date not null,
+  asset         text not null,
+  direction     text not null default 'long',
+  outcome       text not null default 'be',
+  risk_reward   text not null default '',
+  notes         text not null default '',
+  created_at    timestamptz not null default now()
+);
+create index if not exists journal_student_idx on public.journal_entries (student_id, entry_date desc);
+alter table public.journal_entries enable row level security;
+-- Sin lectura pública: se accede solo desde el servidor con el código del alumno.
+
+-- ---------------------------------------------------------------------------
+-- Progreso del alumno: una fila por clase completada.
+-- ---------------------------------------------------------------------------
+create table if not exists public.progress (
+  id           bigserial primary key,
+  student_id   bigint not null references public.students(id) on delete cascade,
+  class_id     text not null,
+  completed_at timestamptz not null default now(),
+  unique (student_id, class_id)
+);
+create index if not exists progress_student_idx on public.progress (student_id);
+alter table public.progress enable row level security;
+-- Sin lectura pública: se accede solo desde el servidor con el código del alumno.
 
 -- ---------------------------------------------------------------------------
 -- Datos de demostración (8 clases en módulos). Cámbialos o bórralos cuando quieras.

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { ClassCard } from "./ClassCard";
-import { CATEGORIES, LEVELS, type TradingClass } from "@/lib/types";
+import { LEVELS, type TradingClass } from "@/lib/types";
 
 export function ClassLibrary({
   classes,
@@ -15,6 +15,13 @@ export function ClassLibrary({
   const [cat, setCat] = useState<string>(initialCat);
   const [level, setLevel] = useState<string>("Todos");
   const [q, setQ] = useState("");
+
+  // Categorías reales presentes en las clases (texto libre que escribe Angel).
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    for (const c of classes) if (c.category.trim()) seen.add(c.category.trim());
+    return [...seen].sort((a, b) => a.localeCompare(b));
+  }, [classes]);
 
   const filtered = useMemo(() => {
     return classes.filter((c) => {
@@ -61,7 +68,7 @@ export function ClassLibrary({
 
       {/* Category pills */}
       <div className="flex flex-wrap gap-2">
-        {["Todas", ...CATEGORIES].map((c) => (
+        {["Todas", ...categories].map((c) => (
           <button
             key={c}
             onClick={() => setCat(c)}

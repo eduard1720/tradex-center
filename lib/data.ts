@@ -17,7 +17,6 @@ function rawSeed(): NewClassInput[] {
       category: "Fundamentos",
       level: "Principiante",
       videoUrl: "https://www.youtube.com/watch?v=p7HKvqRI_Bo",
-      durationMin: 24,
       instructor: "Angel Hurtado",
       tags: ["velas", "básico", "gráficos"],
       module: 1,
@@ -30,7 +29,6 @@ function rawSeed(): NewClassInput[] {
       category: "Análisis Técnico",
       level: "Principiante",
       videoUrl: "https://www.youtube.com/watch?v=hRSjg5GTvDw",
-      durationMin: 38,
       instructor: "Angel Hurtado",
       tags: ["soportes", "resistencias"],
       module: 1,
@@ -43,7 +41,6 @@ function rawSeed(): NewClassInput[] {
       category: "Price Action",
       level: "Intermedio",
       videoUrl: "https://www.youtube.com/watch?v=GltlJO56S1g",
-      durationMin: 52,
       instructor: "Angel Hurtado",
       tags: ["smc", "order block", "estructura"],
       module: 2,
@@ -56,7 +53,6 @@ function rawSeed(): NewClassInput[] {
       category: "Forex",
       level: "Intermedio",
       videoUrl: "https://www.youtube.com/watch?v=rfscVS0vtbw",
-      durationMin: 35,
       instructor: "Angel Hurtado",
       tags: ["forex", "sesiones"],
       module: 2,
@@ -69,7 +65,6 @@ function rawSeed(): NewClassInput[] {
       category: "Gestión de Riesgo",
       level: "Principiante",
       videoUrl: "https://www.youtube.com/watch?v=Nb2x4mAvLZA",
-      durationMin: 31,
       instructor: "Angel Hurtado",
       tags: ["riesgo", "money management"],
       module: 3,
@@ -82,7 +77,6 @@ function rawSeed(): NewClassInput[] {
       category: "Psicología",
       level: "Intermedio",
       videoUrl: "https://www.youtube.com/watch?v=6_b7RDuLwcI",
-      durationMin: 27,
       instructor: "Angel Hurtado",
       tags: ["mentalidad", "disciplina"],
       module: 3,
@@ -95,7 +89,6 @@ function rawSeed(): NewClassInput[] {
       category: "Cripto",
       level: "Avanzado",
       videoUrl: "https://www.youtube.com/watch?v=l1F2dvk3xCc",
-      durationMin: 44,
       instructor: "Angel Hurtado",
       tags: ["btc", "swing", "cripto"],
       module: 4,
@@ -108,7 +101,6 @@ function rawSeed(): NewClassInput[] {
       category: "En Vivo",
       level: "Intermedio",
       videoUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
-      durationMin: 68,
       instructor: "Angel Hurtado",
       tags: ["en vivo", "análisis semanal"],
       module: 0,
@@ -171,7 +163,6 @@ interface Row {
   video_url: string;
   embed_url: string;
   thumbnail: string;
-  duration_min: number;
   instructor: string;
   tags: string[] | null;
   created_at: string;
@@ -190,7 +181,6 @@ function rowToClass(r: Row): TradingClass {
     videoUrl: r.video_url,
     embedUrl: r.embed_url,
     thumbnail: r.thumbnail,
-    durationMin: r.duration_min,
     instructor: r.instructor,
     tags: r.tags ?? [],
     createdAt: r.created_at,
@@ -210,7 +200,6 @@ function classToRow(c: TradingClass): Row {
     video_url: c.videoUrl,
     embed_url: c.embedUrl,
     thumbnail: c.thumbnail,
-    duration_min: c.durationMin,
     instructor: c.instructor,
     tags: c.tags,
     created_at: c.createdAt,
@@ -227,7 +216,6 @@ export type ClassPatch = Partial<
     | "description"
     | "category"
     | "level"
-    | "durationMin"
     | "module"
     | "moduleTitle"
     | "tags"
@@ -253,7 +241,6 @@ function patchToRow(patch: ClassPatch): Record<string, unknown> {
   if (patch.description !== undefined) upd.description = patch.description;
   if (patch.category !== undefined) upd.category = patch.category;
   if (patch.level !== undefined) upd.level = patch.level;
-  if (patch.durationMin !== undefined) upd.duration_min = patch.durationMin;
   if (patch.module !== undefined) upd.module = patch.module;
   if (patch.moduleTitle !== undefined) upd.module_title = patch.moduleTitle;
   if (patch.tags !== undefined) upd.tags = patch.tags;

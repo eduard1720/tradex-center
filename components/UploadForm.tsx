@@ -11,10 +11,9 @@ const empty = {
   title: "",
   description: "",
   videoUrl: "",
-  category: CATEGORIES[0] as string,
+  category: "",
   level: LEVELS[0] as string,
   instructor: "Angel Hurtado",
-  durationMin: "",
   tags: "",
   module: "1",
   moduleTitle: "",
@@ -50,7 +49,6 @@ export function UploadForm() {
         },
         body: JSON.stringify({
           ...form,
-          durationMin: Number(form.durationMin),
           module: Number(form.module),
         }),
       });
@@ -176,14 +174,21 @@ export function UploadForm() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="label">Categoría</label>
-            <select className="input" value={form.category} onChange={(e) => set("category", e.target.value)}>
+            <input
+              className="input"
+              list="categorias"
+              placeholder="Escribe o elige una categoría"
+              value={form.category}
+              onChange={(e) => set("category", e.target.value)}
+            />
+            <datalist id="categorias">
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c} />
               ))}
-            </select>
+            </datalist>
           </div>
           <div>
             <label className="label">Nivel</label>
@@ -192,17 +197,6 @@ export function UploadForm() {
                 <option key={l} value={l}>{l}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="label">Duración (min)</label>
-            <input
-              type="number"
-              min={1}
-              className="input"
-              placeholder="35"
-              value={form.durationMin}
-              onChange={(e) => set("durationMin", e.target.value)}
-            />
           </div>
         </div>
 
@@ -266,7 +260,7 @@ export function UploadForm() {
             {form.title || "Título de tu clase"}
           </h3>
           <p className="mt-1 text-xs text-muted">
-            {form.category} · {form.level} · {form.durationMin || "0"} min
+            {form.category || "Categoría"} · {form.level}
           </p>
         </div>
 

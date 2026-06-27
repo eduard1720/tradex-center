@@ -7,7 +7,7 @@ import {
   type ClassPatch,
 } from "@/lib/data";
 import { isValidVideoUrl } from "@/lib/video";
-import { CATEGORIES, LEVELS, type Category, type Level } from "@/lib/types";
+import { LEVELS, type Level } from "@/lib/types";
 
 export async function GET() {
   return NextResponse.json({ classes: await getAllClasses() });
@@ -34,10 +34,9 @@ export async function POST(req: Request) {
   const title = String(body.title ?? "").trim();
   const description = String(body.description ?? "").trim();
   const videoUrl = String(body.videoUrl ?? "").trim();
-  const category = String(body.category ?? "") as Category;
+  const category = String(body.category ?? "").trim();
   const level = String(body.level ?? "") as Level;
   const instructor = String(body.instructor ?? "Angel Hurtado").trim() || "Angel Hurtado";
-  const durationMin = Math.max(1, Math.round(Number(body.durationMin) || 0));
   const moduleNum = Math.max(0, Math.round(Number(body.module) || 0));
   const moduleTitle = String(body.moduleTitle ?? "").trim();
   const tags = Array.isArray(body.tags)
@@ -52,9 +51,8 @@ export async function POST(req: Request) {
   if (title.length < 4) errors.push("El título es obligatorio (mín. 4 caracteres).");
   if (description.length < 10) errors.push("Añade una descripción (mín. 10 caracteres).");
   if (!isValidVideoUrl(videoUrl)) errors.push("El link debe ser de YouTube o Vimeo.");
-  if (!CATEGORIES.includes(category)) errors.push("Categoría inválida.");
+  if (!category) errors.push("Escribe una categoría para la clase.");
   if (!LEVELS.includes(level)) errors.push("Nivel inválido.");
-  if (!durationMin) errors.push("Indica la duración en minutos.");
 
   if (errors.length) {
     return NextResponse.json({ error: errors.join(" ") }, { status: 422 });
@@ -68,7 +66,6 @@ export async function POST(req: Request) {
       category,
       level,
       instructor,
-      durationMin,
       tags,
       module: moduleNum,
       moduleTitle,
@@ -111,10 +108,11 @@ export async function PATCH(req: Request) {
     patch.videoUrl = body.videoUrl.trim();
   }
   if (typeof body.category === "string") {
-    if (!CATEGORIES.includes(body.category as Category)) {
-      return NextResponse.json({ error: "Categoría inválida." }, { status: 422 });
+    const cat = body.category.trim();
+    if (!cat) {
+      return NextResponse.json({ error: "La categoría no puede quedar vacía." }, { status: 422 });
     }
-    patch.category = body.category as Category;
+    patch.category = cat;
   }
   if (typeof body.level === "string") {
     if (!LEVELS.includes(body.level as Level)) {
@@ -122,7 +120,6 @@ export async function PATCH(req: Request) {
     }
     patch.level = body.level as Level;
   }
-  if (body.durationMin !== undefined) patch.durationMin = Math.max(1, Math.round(Number(body.durationMin) || 0));
   if (body.module !== undefined) patch.module = Math.max(0, Math.round(Number(body.module) || 0));
   if (typeof body.moduleTitle === "string") patch.moduleTitle = body.moduleTitle.trim();
   if (body.tags !== undefined) {

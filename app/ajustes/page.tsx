@@ -1,22 +1,6 @@
-import { User, Bell, Shield, Palette } from "lucide-react";
+import { User, Bell, Shield } from "lucide-react";
 
 export const metadata = { title: "Ajustes — TradeX Center" };
-
-function Toggle({ on = false }: { on?: boolean }) {
-  return (
-    <span
-      className={`inline-flex h-6 w-11 items-center rounded-full p-0.5 transition-colors ${
-        on ? "bg-brand" : "bg-card-hover"
-      }`}
-    >
-      <span
-        className={`h-5 w-5 rounded-full bg-white transition-transform ${
-          on ? "translate-x-5" : ""
-        }`}
-      />
-    </span>
-  );
-}
 
 export default function AjustesPage() {
   return (
@@ -73,30 +57,10 @@ export default function AjustesPage() {
               <Bell className="h-5 w-5 text-brand" />
               <h2 className="text-base font-semibold">Notificaciones</h2>
             </div>
-            <div className="mt-4 space-y-3 text-sm">
-              {[
-                ["Nuevas clases", true],
-                ["Sesiones en vivo", true],
-                ["Respuestas en comunidad", false],
-                ["Resumen semanal", true],
-              ].map(([label, on]) => (
-                <div key={label as string} className="flex items-center justify-between">
-                  <span className="text-white/90">{label}</span>
-                  <Toggle on={on as boolean} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card p-5">
-            <div className="flex items-center gap-2 text-white">
-              <Palette className="h-5 w-5 text-brand" />
-              <h2 className="text-base font-semibold">Apariencia</h2>
-            </div>
-            <div className="mt-4 flex items-center justify-between text-sm">
-              <span className="text-white/90">Tema oscuro</span>
-              <Toggle on />
-            </div>
+            <p className="mt-3 text-sm text-muted">
+              Todos los avisos (nuevas clases, sesiones en vivo y cambios) se envían por
+              WhatsApp. Asegúrate de estar en el grupo de la comunidad para no perderte nada.
+            </p>
           </div>
 
           <div className="card p-5">

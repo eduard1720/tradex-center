@@ -2,6 +2,8 @@ import { Radio, ArrowUpRight, CalendarClock, Video } from "lucide-react";
 import { waLink } from "@/lib/site";
 import { getLiveSessions } from "@/lib/live";
 import { LiveAdmin } from "@/components/LiveAdmin";
+import { LiveCountdown } from "@/components/LiveCountdown";
+import { LiveNotifyButtons } from "@/components/LiveNotifyButtons";
 
 export const metadata = { title: "Clases en vivo — TradeX Center" };
 export const dynamic = "force-dynamic";
@@ -49,6 +51,9 @@ export default async function EnVivoPage() {
             <p className="mt-1 flex items-center gap-1.5 text-sm capitalize text-muted">
               <CalendarClock className="h-4 w-4" /> {formatWhen(next.startsAt)} (hora Bolivia)
             </p>
+
+            <LiveCountdown startsAt={next.startsAt} />
+
             <a
               href={
                 next.link ||
@@ -61,6 +66,8 @@ export default async function EnVivoPage() {
               {next.link ? "Unirme a la sesión" : "Pedir el enlace por WhatsApp"}
               <ArrowUpRight className="h-4 w-4" />
             </a>
+
+            <LiveNotifyButtons title={next.title} startsAt={next.startsAt} link={next.link} />
           </>
         ) : (
           <>

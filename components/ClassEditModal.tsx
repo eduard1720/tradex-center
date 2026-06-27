@@ -20,7 +20,6 @@ export function ClassEditModal({
     videoUrl: cls.videoUrl,
     category: cls.category as string,
     level: cls.level as string,
-    durationMin: String(cls.durationMin),
     module: String(cls.module),
     moduleTitle: cls.moduleTitle,
     tags: cls.tags.join(", "),
@@ -43,7 +42,6 @@ export function ClassEditModal({
         },
         body: JSON.stringify({
           ...form,
-          durationMin: Number(form.durationMin),
           module: Number(form.module),
         }),
       });
@@ -87,14 +85,20 @@ export function ClassEditModal({
             <label className="label">Link del video</label>
             <input className="input" value={form.videoUrl} onChange={(e) => set("videoUrl", e.target.value)} />
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="label">Categoría</label>
-              <select className="input" value={form.category} onChange={(e) => set("category", e.target.value)}>
+              <input
+                className="input"
+                list="categorias-edit"
+                value={form.category}
+                onChange={(e) => set("category", e.target.value)}
+              />
+              <datalist id="categorias-edit">
                 {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c} />
                 ))}
-              </select>
+              </datalist>
             </div>
             <div>
               <label className="label">Nivel</label>
@@ -103,16 +107,6 @@ export function ClassEditModal({
                   <option key={l} value={l}>{l}</option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label className="label">Duración (min)</label>
-              <input
-                type="number"
-                min={1}
-                className="input"
-                value={form.durationMin}
-                onChange={(e) => set("durationMin", e.target.value)}
-              />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
