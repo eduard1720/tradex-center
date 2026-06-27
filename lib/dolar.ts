@@ -128,11 +128,17 @@ export async function recordSnapshot(rate: ParallelRate | null): Promise<void> {
 /* -------------------------------------------------------------------------- */
 
 export interface RatePoint {
-  ts: string; // fecha del día (mediodía UTC para evitar saltos de día)
+  ts: string; // fecha/hora del punto
   avg: number;
 }
 
-const SNAPSHOT_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 horas
+export interface RateHistory {
+  points: RatePoint[];
+  /** true = un punto por día (promedio diario); false = puntos intradía. */
+  daily: boolean;
+}
+
+const SNAPSHOT_INTERVAL_MS = 60 * 60 * 1000; // 1 hora (junta puntos más rápido)
 const DAYS_WINDOW = 30;
 
 /** Clave de día en hora de Bolivia (UTC-4, sin horario de verano). */
@@ -143,13 +149,13 @@ function boliviaDay(iso: string): string {
 
 export async function recordAndGetHistory(
   rate: ParallelRate | null
-): Promise<RatePoint[]> {
-  if (!hasSupabase()) return [];
+): Promise<RateHistory> {
+  if (!hasSupabase()) return { points: [], daily: true };
   try {
     const sb = getSupabase();
 
     if (rate) {
-      // Guarda un snapshot solo si el último tiene más de 6 horas.
+      // Guarda un snapshot solo si el último tiene más de 1 hora.
       const { data: lastRows } = await sb
         .from("dolar_snapshots")
         .select("ts")
@@ -170,26 +176,38 @@ export async function recordAndGetHistory(
       .gte("ts", since)
       .order("ts", { ascending: true })
       .limit(5000);
-    if (error || !data) return [];
+    if (error || !data) return { points: [], daily: true };
 
-    // Agrupa por día y promedia.
+    const rows = (data as { ts: string; avg: number }[]).map((r) => ({
+      ts: r.ts,
+      avg: Number(r.avg),
+    }));
+
+    // Agrupa por día (hora Bolivia) y promedia.
     const byDay = new Map<string, number[]>();
-    for (const row of data as { ts: string; avg: number }[]) {
+    for (const row of rows) {
       const key = boliviaDay(row.ts);
       const arr = byDay.get(key) ?? [];
-      arr.push(Number(row.avg));
+      arr.push(row.avg);
       byDay.set(key, arr);
     }
 
-    const points: RatePoint[] = [...byDay.entries()]
+    const dailyPoints: RatePoint[] = [...byDay.entries()]
       .map(([day, vals]) => ({
         ts: `${day}T12:00:00.000Z`,
         avg: Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)),
       }))
       .sort((a, b) => a.ts.localeCompare(b.ts));
 
-    return points.slice(-DAYS_WINDOW);
+    // Con 2+ días → vista diaria (evolución a largo plazo).
+    if (dailyPoints.length >= 2) {
+      return { points: dailyPoints.slice(-DAYS_WINDOW), daily: true };
+    }
+
+    // Con un solo día → muestra los snapshots intradía para que el gráfico
+    // se dibuje desde el primer día (no esperar a mañana).
+    return { points: rows.slice(-60), daily: false };
   } catch {
-    return [];
+    return { points: [], daily: true };
   }
 }

@@ -8,10 +8,11 @@ export const dynamic = "force-dynamic";
 // Tipo de cambio oficial fijo de Bolivia (referencia).
 const OFICIAL = 6.96;
 
-function formatTs(ts: string): string {
-  return new Date(ts).toLocaleDateString("es-BO", {
+function formatTs(ts: string, withTime: boolean): string {
+  return new Date(ts).toLocaleString("es-BO", {
     day: "numeric",
     month: "short",
+    ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
     timeZone: "America/La_Paz",
   });
 }
@@ -19,7 +20,9 @@ function formatTs(ts: string): string {
 export default async function DolarPage() {
   const rate = await getParallelUSD();
   const history = await recordAndGetHistory(rate);
-  const series = history.map((h) => h.avg);
+  const points = history.points;
+  const series = points.map((h) => h.avg);
+  const intraday = !history.daily;
 
   const first = series[0];
   const last = series[series.length - 1];
@@ -74,7 +77,9 @@ export default async function DolarPage() {
             </span>
             <div>
               <h2 className="text-base font-semibold text-white">Evolución del paralelo</h2>
-              <p className="text-xs text-muted">Promedio diario (Bs por USD)</p>
+              <p className="text-xs text-muted">
+                {intraday ? "Hoy, por horas (Bs por USD)" : "Promedio diario (Bs por USD)"}
+              </p>
             </div>
           </div>
           {series.length >= 2 && (
@@ -94,18 +99,18 @@ export default async function DolarPage() {
           <>
             <AreaChart data={series} height={220} />
             <div className="mt-2 flex justify-between text-[11px] text-muted">
-              <span>{formatTs(history[0].ts)}</span>
-              <span>{formatTs(history[history.length - 1].ts)}</span>
+              <span>{formatTs(points[0].ts, intraday)}</span>
+              <span>{formatTs(points[points.length - 1].ts, intraday)}</span>
             </div>
           </>
         ) : (
           <div className="grid place-items-center rounded-xl border border-dashed border-line py-12 text-center">
             <RefreshCw className="mb-2 h-5 w-5 text-muted" />
             <p className="text-sm text-muted">
-              El histórico se construye automáticamente cada día.
+              Aún estamos tomando la primera lectura del paralelo.
             </p>
             <p className="text-xs text-muted">
-              Vuelve mañana para ver cómo se mueve el dólar blue. 📈
+              Recarga en unos minutos para ver la evolución. 📈
             </p>
           </div>
         )}
