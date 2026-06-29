@@ -68,6 +68,11 @@ export default async function HerramientasPage() {
                 </div>
                 <h3 className="mt-3 line-clamp-2 text-sm font-semibold text-white">{r.title}</h3>
                 <p className="mt-1 text-xs text-muted">{meta.label}</p>
+                {r.target && (
+                  <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-medium text-brand">
+                    {r.target}
+                  </span>
+                )}
                 <a
                   href={r.url}
                   target="_blank"

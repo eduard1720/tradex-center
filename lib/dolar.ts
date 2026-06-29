@@ -104,9 +104,9 @@ async function fromBinance(): Promise<ParallelRate | null> {
   };
 }
 
-/** Devuelve el paralelo Bolivia (CriptoYa, con respaldo a Binance). */
+/** Devuelve el paralelo Bolivia (Binance P2P como fuente principal, respaldo CriptoYa). */
 export async function getParallelUSD(): Promise<ParallelRate | null> {
-  return (await fromCriptoya()) ?? (await fromBinance());
+  return (await fromBinance()) ?? (await fromCriptoya());
 }
 
 /** Guarda un snapshot sin throttling (lo usa el cron diario). */

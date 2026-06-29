@@ -4,6 +4,7 @@ import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/Topbar";
 import { AccessGate } from "@/components/AccessGate";
+import { VideoBackground } from "@/components/VideoBackground";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,7 +26,8 @@ export default function RootLayout({
   return (
     <html lang="es" className={inter.variable}>
       <body className="app-backdrop min-h-screen font-sans text-white antialiased">
-        <div className="flex">
+        <VideoBackground />
+        <div className="relative z-10 flex">
           <Sidebar />
           <div className="flex min-h-screen w-full min-w-0 flex-col">
             <Topbar />

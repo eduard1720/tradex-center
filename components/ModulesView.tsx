@@ -9,6 +9,7 @@ import {
   PlayCircle,
   BarChart3,
   ChevronRight,
+  ChevronDown,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -44,6 +45,10 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
   const isAdmin = useAdmin();
   const router = useRouter();
   const [editing, setEditing] = useState<TradingClass | null>(null);
+  // Estado de despliegue por módulo (override del valor por defecto).
+  const [openOverride, setOpenOverride] = useState<Record<number, boolean>>({});
+  const toggleOpen = (module: number, current: boolean) =>
+    setOpenOverride((o) => ({ ...o, [module]: !current }));
 
   useEffect(() => {
     const sync = () => setCompleted(getCompleted());
@@ -99,15 +104,25 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
         const moduleUnlocked = isAdmin || mi === 0 || moduleDone(modules[mi - 1]);
         const doneCount = g.lessons.filter((l) => completed.has(l.id)).length;
         const pct = Math.round((doneCount / g.lessons.length) * 100);
+        // Por defecto se despliega el módulo desbloqueado que aún no terminas.
+        const defaultOpen = moduleUnlocked && doneCount < g.lessons.length;
+        const expanded = openOverride[g.module] ?? defaultOpen;
 
         return (
           <div
             key={g.module}
             className={`card overflow-hidden p-0 ${!moduleUnlocked ? "opacity-90" : ""}`}
           >
-            {/* Cabecera del módulo */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-5">
+            {/* Cabecera del módulo (clic para desplegar/plegar) */}
+            <button
+              type="button"
+              onClick={() => toggleOpen(g.module, expanded)}
+              className="flex w-full flex-wrap items-center justify-between gap-3 border-b border-line p-5 text-left transition-colors hover:bg-card-hover/40"
+            >
               <div className="flex items-center gap-3">
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 text-muted transition-transform ${expanded ? "" : "-rotate-90"}`}
+                />
                 <span
                   className={`grid h-11 w-11 place-items-center rounded-xl text-sm font-bold ${
                     moduleUnlocked ? "bg-brand text-black" : "bg-card-soft text-muted"
@@ -115,6 +130,16 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
                 >
                   {moduleUnlocked ? g.module : <Lock className="h-5 w-5" />}
                 </span>
+                {g.lessons[0]?.thumbnail && (
+                  <div className="relative hidden aspect-video w-20 shrink-0 overflow-hidden rounded-lg border border-line bg-card-soft sm:block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={g.lessons[0].thumbnail}
+                      alt=""
+                      className={`h-full w-full object-cover ${moduleUnlocked ? "" : "opacity-40 grayscale"}`}
+                    />
+                  </div>
+                )}
                 <div>
                   <p className="text-[11px] uppercase tracking-wider text-muted">Módulo {g.module}</p>
                   <h3 className="text-base font-semibold text-white">{g.title}</h3>
@@ -123,20 +148,30 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
               <div className="flex items-center gap-3">
                 {isAdmin && (
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => renameModuleHandler(g.module, g.title)}
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        renameModuleHandler(g.module, g.title);
+                      }}
                       title="Renombrar módulo"
                       className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:text-white"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => deleteModuleHandler(g.module)}
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteModuleHandler(g.module);
+                      }}
                       title="Eliminar módulo"
                       className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:border-neg/40 hover:text-neg"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    </span>
                   </div>
                 )}
                 <div className="text-right">
@@ -148,10 +183,10 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Mensaje de bloqueo */}
-            {!moduleUnlocked && (
+            {expanded && !moduleUnlocked && (
               <div className="flex items-center gap-2 bg-card-soft/40 px-5 py-2.5 text-xs text-muted">
                 <Lock className="h-3.5 w-3.5" />
                 Completa el <strong className="text-white/80">Módulo {modules[mi - 1].module}</strong> para desbloquear este módulo.
@@ -159,6 +194,7 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
             )}
 
             {/* Clases del módulo */}
+            {expanded && (
             <ul className="divide-y divide-line">
               {g.lessons.map((lesson, li) => {
                 const isDone = completed.has(lesson.id);
@@ -198,6 +234,7 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
                 );
               })}
             </ul>
+            )}
           </div>
         );
       })}
@@ -252,6 +289,17 @@ function LessonRow({
           <Lock className="h-3.5 w-3.5" />
         )}
       </span>
+
+      {lesson.thumbnail && (
+        <div className="relative aspect-video w-16 shrink-0 overflow-hidden rounded-md border border-line bg-card-soft">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lesson.thumbnail}
+            alt=""
+            className={`h-full w-full object-cover ${unlocked ? "" : "opacity-40 grayscale"}`}
+          />
+        </div>
+      )}
 
       <div className="min-w-0 flex-1">
         <p className={`truncate text-sm font-medium ${unlocked ? "text-white" : "text-muted"}`}>

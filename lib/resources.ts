@@ -15,6 +15,8 @@ export interface Resource {
   url: string;
   path: string;
   kind: string;
+  /** A qué módulo o lección va dirigido el material (texto libre). */
+  target: string;
   createdAt: string;
 }
 
@@ -25,6 +27,7 @@ interface Row {
   file_url: string;
   path: string;
   kind: string;
+  target: string | null;
   created_at: string;
 }
 
@@ -55,6 +58,7 @@ export async function getResources(): Promise<Resource[]> {
       url: r.file_url,
       path: r.path,
       kind: r.kind,
+      target: r.target ?? "",
       createdAt: r.created_at,
     }));
   } catch {
@@ -68,6 +72,7 @@ export async function addResource(r: {
   url: string;
   path: string;
   kind: string;
+  target?: string;
 }): Promise<void> {
   const { error } = await getSupabase().from("resources").insert({
     title: r.title,
@@ -75,6 +80,7 @@ export async function addResource(r: {
     file_url: r.url,
     path: r.path,
     kind: r.kind,
+    target: r.target ?? "",
   });
   if (error) throw new Error(error.message);
 }

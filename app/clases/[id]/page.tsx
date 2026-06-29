@@ -49,13 +49,15 @@ export default async function ClassDetailPage({
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Player + info */}
         <div className="space-y-5 lg:col-span-2">
-          <VideoPlayer
-            classId={cls.id}
-            provider={parseVideo(cls.videoUrl).provider}
-            videoId={parseVideo(cls.videoUrl).id}
-            embedUrl={cls.embedUrl}
-            title={cls.title}
-          />
+          <div className="mx-auto w-full max-w-2xl">
+            <VideoPlayer
+              classId={cls.id}
+              provider={parseVideo(cls.videoUrl).provider}
+              videoId={parseVideo(cls.videoUrl).id}
+              embedUrl={cls.embedUrl}
+              title={cls.title}
+            />
+          </div>
 
           <div className="card p-5">
             <div className="flex flex-wrap items-center gap-2">

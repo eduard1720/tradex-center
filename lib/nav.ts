@@ -22,7 +22,7 @@ export interface NavItem {
 }
 
 export const MAIN_NAV: NavItem[] = [
-  { label: "Inicio", href: "/", icon: LayoutGrid },
+  { label: "Bienvenida", href: "/", icon: LayoutGrid },
   { label: "Clases", href: "/clases", icon: PlayCircle },
   { label: "Clases en vivo", href: "/en-vivo", icon: Radio },
   { label: "Comentarios", href: "/comentarios", icon: MessageSquareQuote },

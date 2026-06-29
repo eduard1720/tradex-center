@@ -39,6 +39,7 @@ export async function POST(req: Request) {
 
   const file = form.get("file");
   const title = String(form.get("title") ?? "").trim();
+  const target = String(form.get("target") ?? "").trim();
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: "Selecciona un archivo." }, { status: 422 });
   }
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
       );
     }
     const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-    await addResource({ title: title || file.name, fileName: file.name, url, path, kind });
+    await addResource({ title: title || file.name, fileName: file.name, url, path, kind, target });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (err) {
     console.error("Error al subir la herramienta:", err);

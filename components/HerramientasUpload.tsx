@@ -10,6 +10,7 @@ export function HerramientasUpload() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
+  const [target, setTarget] = useState("");
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [error, setError] = useState("");
 
@@ -28,6 +29,7 @@ export function HerramientasUpload() {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("title", title);
+      fd.append("target", target);
       const res = await fetch("/api/herramientas", {
         method: "POST",
         headers: { "x-admin-password": getAdminPw() ?? "" },
@@ -40,6 +42,7 @@ export function HerramientasUpload() {
         return;
       }
       setTitle("");
+      setTarget("");
       if (fileRef.current) fileRef.current.value = "";
       router.refresh();
     } catch {
@@ -68,6 +71,15 @@ export function HerramientasUpload() {
           />
         </div>
         <div>
+          <label className="label">¿Para qué módulo o lección? (opcional)</label>
+          <input
+            className="input"
+            placeholder="Ej: Módulo 2 · Order blocks"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+          />
+        </div>
+        <div className="sm:col-span-2">
           <label className="label">Archivo (PDF, PPT, libro, etc.)</label>
           <input
             ref={fileRef}
