@@ -2,18 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Circle } from "lucide-react";
-import { isCompleted, setCompleted, toggleCompleted, onProgressChange } from "@/lib/progress";
+import { isCompleted, setCompleted, onProgressChange } from "@/lib/progress";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
   interface Window {
     YT?: any;
     onYouTubeIframeAPIReady?: () => void;
+    Vimeo?: any;
   }
 }
 
-let apiLoading = false;
+/* --- Carga perezosa de las APIs de reproductor --------------------------- */
 
+let ytLoading = false;
 function ensureYouTubeAPI(cb: () => void) {
   if (typeof window === "undefined") return;
   if (window.YT && window.YT.Player) {
@@ -25,14 +27,40 @@ function ensureYouTubeAPI(cb: () => void) {
     prev?.();
     cb();
   };
-  if (!apiLoading) {
-    apiLoading = true;
+  if (!ytLoading) {
+    ytLoading = true;
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
   }
 }
 
+let vimeoLoading = false;
+let vimeoReadyCbs: (() => void)[] = [];
+function ensureVimeoAPI(cb: () => void) {
+  if (typeof window === "undefined") return;
+  if (window.Vimeo && window.Vimeo.Player) {
+    cb();
+    return;
+  }
+  vimeoReadyCbs.push(cb);
+  if (vimeoLoading) return;
+  vimeoLoading = true;
+  const tag = document.createElement("script");
+  tag.src = "https://player.vimeo.com/api/player.js";
+  tag.onload = () => {
+    const cbs = vimeoReadyCbs;
+    vimeoReadyCbs = [];
+    cbs.forEach((f) => f());
+  };
+  document.head.appendChild(tag);
+}
+
+/**
+ * Reproductor de clase. El progreso es 100% automático: cuando el alumno
+ * termina de ver el video (evento "ended" de YouTube o Vimeo) la clase se
+ * marca como completada y se desbloquea la siguiente. No hay botón manual.
+ */
 export function VideoPlayer({
   classId,
   provider,
@@ -49,6 +77,7 @@ export function VideoPlayer({
   // Contenedor que React posee; el nodo del player de YouTube lo creamos y
   // destruimos nosotros para no chocar con el ciclo de vida de React.
   const wrapRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
@@ -59,7 +88,8 @@ export function VideoPlayer({
 
   useEffect(() => {
     const complete = () => setCompleted(classId, true);
-    let player: any;
+    let ytPlayer: any;
+    let vimeoPlayer: any;
     let cancelled = false;
 
     if (provider === "youtube" && videoId && wrapRef.current) {
@@ -73,7 +103,7 @@ export function VideoPlayer({
 
       ensureYouTubeAPI(() => {
         if (cancelled) return;
-        player = new window.YT.Player(mount, {
+        ytPlayer = new window.YT.Player(mount, {
           videoId,
           playerVars: { rel: 0, modestbranding: 1 },
           events: {
@@ -83,18 +113,35 @@ export function VideoPlayer({
           },
         });
       });
+    } else if (provider === "vimeo" && iframeRef.current) {
+      const iframe = iframeRef.current;
+      ensureVimeoAPI(() => {
+        if (cancelled || !iframe) return;
+        try {
+          vimeoPlayer = new window.Vimeo.Player(iframe);
+          vimeoPlayer.on("ended", complete);
+        } catch {
+          /* noop */
+        }
+      });
     }
 
     return () => {
       cancelled = true;
       try {
-        player?.destroy?.();
+        ytPlayer?.destroy?.();
+      } catch {
+        /* noop */
+      }
+      try {
+        // En Vimeo el iframe lo renderiza React: solo quitamos el listener.
+        vimeoPlayer?.off?.("ended");
       } catch {
         /* noop */
       }
       if (wrapRef.current) wrapRef.current.innerHTML = "";
     };
-  }, [classId, provider, videoId]);
+  }, [classId, provider, videoId, embedUrl]);
 
   return (
     <div className="space-y-2">
@@ -104,6 +151,7 @@ export function VideoPlayer({
             <div ref={wrapRef} className="absolute inset-0 h-full w-full" />
           ) : (
             <iframe
+              ref={iframeRef}
               src={embedUrl}
               title={title}
               className="absolute inset-0 h-full w-full"
@@ -114,33 +162,18 @@ export function VideoPlayer({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className={`flex items-center gap-1.5 text-xs ${done ? "text-pos" : "text-muted"}`}>
-          {done ? (
-            <>
-              <CheckCircle2 className="h-3.5 w-3.5" /> Clase completada · siguiente desbloqueada
-            </>
-          ) : (
-            <>
-              <Circle className="h-3.5 w-3.5" /> Marca la clase como completada al terminar
-            </>
-          )}
-        </p>
-        <button
-          onClick={() => toggleCompleted(classId)}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-            done
-              ? "border-pos/40 bg-pos/10 text-pos"
-              : "border-line text-muted hover:text-white"
-          }`}
-        >
-          {done ? (
-            <><CheckCircle2 className="h-4 w-4" /> Completada</>
-          ) : (
-            <><Circle className="h-4 w-4" /> Marcar como completada</>
-          )}
-        </button>
-      </div>
+      <p className={`flex items-center gap-1.5 text-xs ${done ? "text-pos" : "text-muted"}`}>
+        {done ? (
+          <>
+            <CheckCircle2 className="h-3.5 w-3.5" /> Clase completada · siguiente desbloqueada
+          </>
+        ) : (
+          <>
+            <Circle className="h-3.5 w-3.5" /> La siguiente clase se desbloquea sola al terminar el
+            video
+          </>
+        )}
+      </p>
     </div>
   );
 }
