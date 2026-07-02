@@ -100,10 +100,7 @@ export function Topbar() {
               </button>
             </div>
             <nav className="flex flex-col gap-1">
-              {[
-                ...MAIN_NAV.filter((item) => !(isAdmin && item.href === "/herramientas")),
-                ...(isAdmin ? ADMIN_NAV : []),
-              ].map((item) => {
+              {[...MAIN_NAV, ...(isAdmin ? ADMIN_NAV : [])].map((item) => {
                 const Icon = item.icon;
                 const active =
                   item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);

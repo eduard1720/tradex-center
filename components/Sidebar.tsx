@@ -65,8 +65,7 @@ export function Sidebar() {
       </button>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
-        {/* Herramientas es solo para alumnos: Angel sube el material desde cada lección. */}
-        {MAIN_NAV.filter((item) => !(isAdmin && item.href === "/herramientas")).map((item) => (
+        {MAIN_NAV.map((item) => (
           <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} />
         ))}
 

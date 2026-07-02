@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Download,
   Trash2,
   Lock,
+  UploadCloud,
+  Loader2,
+  ShieldCheck,
   FileText,
   Presentation,
   BookOpen,
@@ -69,17 +72,20 @@ export function HerramientasView({ items }: { items: ToolItem[] }) {
     router.refresh();
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="card grid place-items-center py-16 text-center">
-        <p className="text-muted">Aún no hay material publicado.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      {visible.length === 0 ? (
+    <div className="space-y-5">
+      {/* Subida de material general (no ligado a ninguna lección) — solo Angel. */}
+      {isAdmin && <AdminUpload onDone={() => router.refresh()} />}
+
+      {items.length === 0 ? (
+        <div className="card grid place-items-center py-16 text-center">
+          <p className="text-muted">
+            {isAdmin
+              ? "Aún no has publicado material general. Súbelo desde el recuadro de arriba."
+              : "Aún no hay material publicado."}
+          </p>
+        </div>
+      ) : visible.length === 0 ? (
         <div className="card grid place-items-center py-16 text-center">
           <p className="text-muted">
             Todavía no tienes material disponible. Avanza en tus clases para desbloquear los recursos.
@@ -140,5 +146,98 @@ export function HerramientasView({ items }: { items: ToolItem[] }) {
         </p>
       )}
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Subida de material general (sin lección). Se guarda sin classId, así que  */
+/*  todos los alumnos lo ven en Herramientas independientemente de su avance. */
+/* -------------------------------------------------------------------------- */
+
+function AdminUpload({ onDone }: { onDone: () => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [title, setTitle] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading">("idle");
+  const [error, setError] = useState("");
+
+  async function upload(e: React.FormEvent) {
+    e.preventDefault();
+    const file = fileRef.current?.files?.[0];
+    if (!file) {
+      setError("Selecciona un archivo.");
+      return;
+    }
+    setStatus("loading");
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("title", title);
+      // Sin classId: es material general de la comunidad, no de una lección.
+      const res = await fetch("/api/herramientas", {
+        method: "POST",
+        headers: { "x-admin-password": getAdminPw() ?? "" },
+        body: fd,
+      });
+      setStatus("idle");
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error ?? "No se pudo subir el archivo.");
+        return;
+      }
+      setTitle("");
+      if (fileRef.current) fileRef.current.value = "";
+      onDone();
+    } catch {
+      setStatus("idle");
+      setError("Error de red. Inténtalo de nuevo.");
+    }
+  }
+
+  return (
+    <form onSubmit={upload} className="card border-brand/30 p-6">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-soft text-brand">
+          <ShieldCheck className="h-4 w-4" />
+        </span>
+        <div>
+          <h2 className="text-base font-semibold text-white">Modo Angel · Subir material general</h2>
+          <p className="text-[11px] text-muted">
+            Recursos para toda la comunidad, sin relación con una lección concreta.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label className="label">Título (opcional)</label>
+          <input
+            className="input"
+            placeholder="Ej: Calendario económico 2026"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Archivo (PDF, PPT, libro, etc.)</label>
+          <input
+            ref={fileRef}
+            type="file"
+            className="input file:mr-3 file:rounded-md file:border-0 file:bg-brand-soft file:px-3 file:py-1 file:text-brand"
+          />
+        </div>
+      </div>
+
+      {error && <p className="mt-2 text-xs text-neg">{error}</p>}
+
+      <button type="submit" disabled={status === "loading"} className="btn-primary mt-4 disabled:opacity-60">
+        {status === "loading" ? (
+          <><Loader2 className="h-4 w-4 animate-spin" /> Subiendo...</>
+        ) : (
+          <><UploadCloud className="h-4 w-4" /> Subir archivo</>
+        )}
+      </button>
+      <p className="mt-2 text-[11px] text-muted">Máximo 50 MB por archivo.</p>
+    </form>
   );
 }
