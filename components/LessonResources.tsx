@@ -7,6 +7,7 @@ import {
   UploadCloud,
   Loader2,
   Trash2,
+  X,
   FileText,
   Presentation,
   BookOpen,
@@ -75,9 +76,13 @@ export function LessonResources({
   const isAdmin = useAdmin();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [error, setError] = useState("");
+
+  // Alumno: el botón solo aparece si esta lección tiene material.
+  if (!isAdmin && resources.length === 0) return null;
 
   async function upload(e: React.FormEvent) {
     e.preventDefault();
@@ -124,56 +129,76 @@ export function LessonResources({
   }
 
   return (
-    <div className="mt-5 border-t border-line pt-5">
-      <h2 className="text-sm font-semibold text-white">Recursos de la clase</h2>
+    <div className="mt-5 flex items-center gap-3 border-t border-line pt-5">
+      <button className="btn-ghost" onClick={() => setOpen(true)}>
+        {isAdmin ? <UploadCloud className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+        Recursos de la clase
+      </button>
 
-      {resources.length > 0 ? (
-        <div className="mt-3 flex flex-col gap-2">
-          {resources.map((r) => (
-            <ResourceRow key={r.id} r={r} isAdmin={isAdmin} onDelete={remove} />
-          ))}
-        </div>
-      ) : (
-        <p className="mt-2 text-sm text-muted">
-          {isAdmin
-            ? "Aún no has subido material para esta lección."
-            : "Esta lección todavía no tiene material de apoyo."}
-        </p>
-      )}
+      {open && (
+        <div className="fixed inset-0 z-50 grid place-items-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-line bg-bg-soft p-6 shadow-2xl">
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-white/[0.06] hover:text-white"
+              aria-label="Cerrar"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-      {/* Subida directa desde la lección (solo Angel) */}
-      {isAdmin && (
-        <form onSubmit={upload} className="mt-4 rounded-xl border border-brand/30 bg-brand-soft/30 p-4">
-          <p className="mb-3 text-xs font-medium text-brand">Modo Angel · Subir recurso a esta lección</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className="label">Título (opcional)</label>
-              <input
-                className="input"
-                placeholder="Ej: Guía en PDF de esta clase"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="label">Archivo (PDF, PPT, libro, etc.)</label>
-              <input
-                ref={fileRef}
-                type="file"
-                className="input file:mr-3 file:rounded-md file:border-0 file:bg-brand-soft file:px-3 file:py-1 file:text-brand"
-              />
-            </div>
-          </div>
-          {error && <p className="mt-2 text-xs text-neg">{error}</p>}
-          <button type="submit" disabled={status === "loading"} className="btn-primary mt-3 disabled:opacity-60">
-            {status === "loading" ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Subiendo...</>
+            <h2 className="text-base font-semibold text-white">Recursos de la clase</h2>
+            <p className="mt-1 text-xs text-muted">{target}</p>
+
+            {/* Lista de material */}
+            {resources.length > 0 ? (
+              <div className="mt-4 flex max-h-64 flex-col gap-2 overflow-y-auto">
+                {resources.map((r) => (
+                  <ResourceRow key={r.id} r={r} isAdmin={isAdmin} onDelete={remove} />
+                ))}
+              </div>
             ) : (
-              <><UploadCloud className="h-4 w-4" /> Subir recurso</>
+              <p className="mt-4 text-sm text-muted">
+                {isAdmin
+                  ? "Aún no has subido material para esta lección."
+                  : "Esta lección todavía no tiene material de apoyo."}
+              </p>
             )}
-          </button>
-          <p className="mt-2 text-[11px] text-muted">Máximo 50 MB por archivo.</p>
-        </form>
+
+            {/* Subida directa desde la lección (solo Angel) */}
+            {isAdmin && (
+              <form onSubmit={upload} className="mt-5 rounded-xl border border-brand/30 bg-brand-soft/30 p-4">
+                <p className="mb-3 text-xs font-medium text-brand">Modo Angel · Subir recurso a esta lección</p>
+                <div className="mb-3">
+                  <label className="label">Título (opcional)</label>
+                  <input
+                    className="input"
+                    placeholder="Ej: Guía en PDF de esta clase"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label">Archivo (PDF, PPT, libro, etc.)</label>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    className="input file:mr-3 file:rounded-md file:border-0 file:bg-brand-soft file:px-3 file:py-1 file:text-brand"
+                  />
+                </div>
+                {error && <p className="mt-2 text-xs text-neg">{error}</p>}
+                <button type="submit" disabled={status === "loading"} className="btn-primary mt-3 disabled:opacity-60">
+                  {status === "loading" ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Subiendo...</>
+                  ) : (
+                    <><UploadCloud className="h-4 w-4" /> Subir recurso</>
+                  )}
+                </button>
+                <p className="mt-2 text-[11px] text-muted">Máximo 50 MB por archivo.</p>
+              </form>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
