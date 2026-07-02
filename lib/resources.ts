@@ -81,16 +81,32 @@ export async function addResource(r: {
   target?: string;
   classId?: string;
 }): Promise<void> {
-  const { error } = await getSupabase().from("resources").insert({
+  const base = {
     title: r.title,
     file_name: r.fileName,
     file_url: r.url,
     path: r.path,
     kind: r.kind,
     target: r.target ?? "",
-    class_id: r.classId ?? "",
-  });
-  if (error) throw new Error(error.message);
+  };
+  const { error } = await getSupabase()
+    .from("resources")
+    .insert({ ...base, class_id: r.classId ?? "" });
+  if (!error) return;
+
+  // Respaldo: si la base aún no tiene la columna class_id (falta correr el
+  // ALTER TABLE), guardamos el recurso igual para no romper la subida. El
+  // material queda como "general" hasta que se aplique la migración.
+  if (/class_id/i.test(error.message)) {
+    console.warn(
+      "resources.class_id no existe todavía; guardando el recurso sin lección. " +
+        "Corre el ALTER TABLE de supabase/schema.sql."
+    );
+    const { error: fallbackErr } = await getSupabase().from("resources").insert(base);
+    if (fallbackErr) throw new Error(fallbackErr.message);
+    return;
+  }
+  throw new Error(error.message);
 }
 
 export async function deleteResource(id: number): Promise<void> {
