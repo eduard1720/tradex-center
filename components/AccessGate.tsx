@@ -146,7 +146,7 @@ function MediaPanel() {
             Clases en vivo, módulos a tu ritmo y acompañamiento directo de Angel.
           </p>
           <div className="mt-8 border-t border-white/10 pt-5 text-sm text-white/50">
-            {SITE.tagline} de Angel Hurtado
+            Academia {SITE.name} · CEO Angel Hurtado
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import { getAllClasses, getClassById } from "@/lib/data";
 import { getResources } from "@/lib/resources";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { LessonResources } from "@/components/LessonResources";
+import { Linkify } from "@/components/Linkify";
 import { parseVideo } from "@/lib/video";
 import type { TradingClass } from "@/lib/types";
 
@@ -103,7 +104,9 @@ export default async function ClassDetailPage({
 
             <div className="mt-5 border-t border-line pt-5">
               <h2 className="text-sm font-semibold text-white">Sobre esta clase</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{cls.description}</p>
+              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
+                <Linkify text={cls.description} />
+              </p>
               {cls.tags.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {cls.tags.map((t) => (
