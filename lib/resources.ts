@@ -17,6 +17,8 @@ export interface Resource {
   kind: string;
   /** A qué módulo o lección va dirigido el material (texto libre). */
   target: string;
+  /** Id de la clase/lección a la que pertenece el material (vacío si es general). */
+  classId: string;
   createdAt: string;
 }
 
@@ -28,6 +30,7 @@ interface Row {
   path: string;
   kind: string;
   target: string | null;
+  class_id: string | null;
   created_at: string;
 }
 
@@ -43,13 +46,15 @@ export function kindFromName(name: string): string {
   return "file";
 }
 
-export async function getResources(): Promise<Resource[]> {
+export async function getResources(classId?: string): Promise<Resource[]> {
   if (!hasSupabase()) return [];
   try {
-    const { data, error } = await getSupabase()
+    let query = getSupabase()
       .from("resources")
       .select("*")
       .order("created_at", { ascending: false });
+    if (classId) query = query.eq("class_id", classId);
+    const { data, error } = await query;
     if (error || !data) return [];
     return (data as Row[]).map((r) => ({
       id: r.id,
@@ -59,6 +64,7 @@ export async function getResources(): Promise<Resource[]> {
       path: r.path,
       kind: r.kind,
       target: r.target ?? "",
+      classId: r.class_id ?? "",
       createdAt: r.created_at,
     }));
   } catch {
@@ -73,6 +79,7 @@ export async function addResource(r: {
   path: string;
   kind: string;
   target?: string;
+  classId?: string;
 }): Promise<void> {
   const { error } = await getSupabase().from("resources").insert({
     title: r.title,
@@ -81,6 +88,7 @@ export async function addResource(r: {
     path: r.path,
     kind: r.kind,
     target: r.target ?? "",
+    class_id: r.classId ?? "",
   });
   if (error) throw new Error(error.message);
 }

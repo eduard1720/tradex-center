@@ -4,12 +4,13 @@ import {
   BarChart3,
   PlayCircle,
   Bookmark,
-  Download,
   ArrowLeft,
   Layers,
 } from "lucide-react";
 import { getAllClasses, getClassById } from "@/lib/data";
+import { getResources } from "@/lib/resources";
 import { VideoPlayer } from "@/components/VideoPlayer";
+import { LessonResources } from "@/components/LessonResources";
 import { parseVideo } from "@/lib/video";
 import type { TradingClass } from "@/lib/types";
 
@@ -29,6 +30,12 @@ export default async function ClassDetailPage({
   const { id } = await params;
   const cls = await getClassById(id);
   if (!cls) notFound();
+
+  const resources = await getResources(cls.id);
+  const moduleLabel =
+    cls.module > 0
+      ? `Módulo ${cls.module}${cls.moduleTitle ? ` · ${cls.moduleTitle}` : ""} · ${cls.title}`
+      : cls.title;
 
   const all = await getAllClasses();
   // Clases del mismo módulo (la "ruta" de esta clase), en orden.
@@ -108,9 +115,7 @@ export default async function ClassDetailPage({
               )}
             </div>
 
-            <div className="mt-5 flex items-center gap-3 border-t border-line pt-5">
-              <button className="btn-ghost"><Download className="h-4 w-4" /> Recursos de la clase</button>
-            </div>
+            <LessonResources classId={cls.id} target={moduleLabel} resources={resources} />
           </div>
         </div>
 

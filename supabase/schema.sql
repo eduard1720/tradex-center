@@ -79,10 +79,13 @@ create table if not exists public.resources (
   path       text not null,
   kind       text not null default 'file',
   target     text not null default '',
+  class_id   text not null default '',
   created_at timestamptz not null default now()
 );
 -- Para tablas ya existentes: añade la columna "target" (a qué módulo/lección va dirigido).
 alter table public.resources add column if not exists target text not null default '';
+-- class_id: a qué clase/lección pertenece el material (vacío = material general).
+alter table public.resources add column if not exists class_id text not null default '';
 alter table public.resources enable row level security;
 drop policy if exists "Lectura publica recursos" on public.resources;
 create policy "Lectura publica recursos"

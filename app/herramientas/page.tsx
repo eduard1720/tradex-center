@@ -1,35 +1,43 @@
-import {
-  Download,
-  FileText,
-  Presentation,
-  BookOpen,
-  Sheet,
-  Image as ImageIcon,
-  FileArchive,
-  File,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react";
+import { Wrench } from "lucide-react";
 import { getResources } from "@/lib/resources";
-import { HerramientasUpload } from "@/components/HerramientasUpload";
-import { ResourceDeleteButton } from "@/components/ResourceDeleteButton";
+import { getAllClasses } from "@/lib/data";
+import { HerramientasView, type ToolItem } from "@/components/HerramientasView";
 
 export const metadata = { title: "Herramientas — TradeX Center" };
 export const dynamic = "force-dynamic";
 
-const KIND: Record<string, { icon: LucideIcon; label: string }> = {
-  pdf: { icon: FileText, label: "PDF" },
-  slides: { icon: Presentation, label: "Diapositivas" },
-  doc: { icon: FileText, label: "Documento" },
-  book: { icon: BookOpen, label: "Libro" },
-  sheet: { icon: Sheet, label: "Hoja de cálculo" },
-  image: { icon: ImageIcon, label: "Imagen" },
-  zip: { icon: FileArchive, label: "Comprimido" },
-  file: { icon: File, label: "Archivo" },
-};
-
 export default async function HerramientasPage() {
-  const resources = await getResources();
+  const [resources, classes] = await Promise.all([getResources(), getAllClasses()]);
+
+  // Metadatos de cada clase para poder ordenar el material por módulo y lección.
+  const byId = new Map(classes.map((c) => [c.id, c]));
+
+  const items: ToolItem[] = resources
+    .map((r) => {
+      const cls = r.classId ? byId.get(r.classId) : undefined;
+      return {
+        item: {
+          id: r.id,
+          title: r.title,
+          kind: r.kind,
+          url: r.url,
+          target: r.target,
+          classId: r.classId,
+          className: cls?.title ?? "",
+        } as ToolItem,
+        // Orden: primero por módulo, luego por posición de la lección.
+        module: cls?.module ?? 999,
+        order: cls?.order ?? 999,
+        createdAt: r.createdAt,
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.module - b.module ||
+        a.order - b.order ||
+        a.createdAt.localeCompare(b.createdAt)
+    )
+    .map((x) => x.item);
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -41,51 +49,11 @@ export default async function HerramientasPage() {
           Herramientas
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted">
-          PDFs, diapositivas, libros y todo el material que Angel comparte con la comunidad.
+          PDFs, diapositivas, libros y todo el material de tus clases, ordenado por módulo y lección.
         </p>
       </div>
 
-      {/* Subida (solo admin) */}
-      <HerramientasUpload />
-
-      {/* Lista de archivos */}
-      {resources.length === 0 ? (
-        <div className="card grid place-items-center py-16 text-center">
-          <p className="text-muted">Aún no hay material publicado.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {resources.map((r) => {
-            const meta = KIND[r.kind] ?? KIND.file;
-            const Icon = meta.icon;
-            return (
-              <div key={r.id} className="card flex flex-col p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <ResourceDeleteButton id={r.id} />
-                </div>
-                <h3 className="mt-3 line-clamp-2 text-sm font-semibold text-white">{r.title}</h3>
-                <p className="mt-1 text-xs text-muted">{meta.label}</p>
-                {r.target && (
-                  <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-medium text-brand">
-                    {r.target}
-                  </span>
-                )}
-                <a
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-ghost mt-4 justify-center"
-                >
-                  <Download className="h-4 w-4" /> Abrir / Descargar
-                </a>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <HerramientasView items={items} />
     </div>
   );
 }
