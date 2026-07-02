@@ -29,30 +29,29 @@ export function SidebarVigencia({ collapsed }: { collapsed: boolean }) {
   }
 
   return (
-    <div className="rounded-xl border border-line bg-card-soft/60 p-3">
-      <div className="flex items-center gap-2">
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
+    <div className="px-1">
+      <div className="flex items-center gap-2.5 px-2 py-1.5">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-card-soft text-muted">
           <UserRound className="h-3.5 w-3.5" />
         </span>
-        <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-wider text-muted">Alumno</p>
-          <p className="truncate text-xs font-semibold text-white">{student.name}</p>
-        </div>
+        <p className="min-w-0 truncate text-xs font-medium text-white/80">{student.name}</p>
       </div>
-      <a
-        href={supportUrl()}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-2 flex items-center justify-center gap-1.5 rounded-lg border border-line px-2 py-1.5 text-xs font-medium text-muted hover:text-white"
-      >
-        <MessageCircle className="h-3.5 w-3.5" /> Soporte
-      </a>
-      <button
-        onClick={logoutStudent}
-        className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted hover:text-white"
-      >
-        <LogOut className="h-3.5 w-3.5" /> Cerrar sesión
-      </button>
+      <div className="flex items-center gap-1">
+        <a
+          href={supportUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium text-muted/70 transition-colors hover:bg-card-hover hover:text-white"
+        >
+          <MessageCircle className="h-3.5 w-3.5" /> Soporte
+        </a>
+        <button
+          onClick={logoutStudent}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium text-muted/70 transition-colors hover:bg-card-hover hover:text-white"
+        >
+          <LogOut className="h-3.5 w-3.5" /> Salir
+        </button>
+      </div>
     </div>
   );
 }

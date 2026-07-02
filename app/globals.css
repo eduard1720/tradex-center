@@ -57,6 +57,12 @@ body {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+}
+
 /* Subtle grid / glow backdrop used behind the app */
 .app-backdrop {
   background:
