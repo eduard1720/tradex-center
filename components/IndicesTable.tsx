@@ -11,7 +11,7 @@ function fmt(n: number) {
 function pct(n: number) {
   const positive = n >= 0;
   return (
-    <span className={positive ? "text-pos" : "text-neg"}>
+    <span className={`font-mono tabular-nums ${positive ? "text-pos" : "text-neg"}`}>
       {positive ? "+" : ""}
       {n.toFixed(2)}%
     </span>
@@ -72,7 +72,7 @@ export function IndicesTable() {
               )}
             </div>
             <p className="mt-0.5 text-[11px] text-muted">{i.name}</p>
-            <p className="mt-2 text-lg font-semibold text-white">{fmt(i.price)}</p>
+            <p className="mt-2 font-mono text-lg font-semibold tabular-nums text-white">{fmt(i.price)}</p>
             <p className="text-sm">{pct(i.changePct)}</p>
           </div>
         );

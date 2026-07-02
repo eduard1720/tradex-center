@@ -29,7 +29,7 @@ export function StatCard({
           </span>
         )}
       </div>
-      <p className="mt-3 text-2xl font-semibold tracking-tight text-white">{value}</p>
+      <p className="mt-3 font-mono text-2xl font-semibold tabular-nums tracking-tight text-white">{value}</p>
       <p className="text-xs text-muted">{label}</p>
     </div>
   );

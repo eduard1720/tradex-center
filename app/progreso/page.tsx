@@ -30,7 +30,6 @@ export default async function ProgresoPage() {
   return (
     <div className="space-y-6 animate-fade-up">
       <div>
-        <p className="text-sm text-muted">Tu evolución</p>
         <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Mi progreso</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted">
           Tu avance se guarda en tu cuenta: completa las clases y míralo reflejado aquí desde

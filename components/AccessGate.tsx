@@ -199,7 +199,7 @@ function LoginScreen() {
             maxLength={32}
             disabled={loading}
             aria-invalid={Boolean(error)}
-            className={`w-full rounded-xl border bg-card-soft px-4 py-3.5 text-base font-medium tracking-[0.28em] text-white outline-none transition focus:border-brand/60 focus:ring-2 focus:ring-brand/15 disabled:opacity-60 ${
+            className={`w-full rounded-xl border bg-card-soft px-4 py-3.5 font-mono text-base font-medium tracking-[0.24em] text-white outline-none transition focus:border-brand/60 focus:ring-2 focus:ring-brand/15 disabled:opacity-60 ${
               error ? "border-neg/70" : "border-line"
             }`}
             value={code}

@@ -8,10 +8,10 @@ export default function MercadoPage() {
     <div className="space-y-8 animate-fade-up">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted">Datos de mercado en tiempo real</p>
           <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
-            Explorar mercado
+            Mercado
           </h1>
+          <p className="mt-1 text-sm text-muted">Índices, materias primas y cripto en tiempo real.</p>
         </div>
       </div>
 

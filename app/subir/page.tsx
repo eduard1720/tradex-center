@@ -6,7 +6,6 @@ export default function SubirPage() {
   return (
     <div className="space-y-6 animate-fade-up">
       <div>
-        <p className="text-sm text-muted">Panel del instructor</p>
         <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
           Subir nueva clase
         </h1>

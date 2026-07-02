@@ -30,7 +30,6 @@ export default async function EnVivoPage() {
   return (
     <div className="space-y-6 animate-fade-up">
       <div>
-        <p className="text-sm text-muted">Sesiones en directo con Angel</p>
         <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
           Clases en vivo
         </h1>
@@ -41,7 +40,6 @@ export default async function EnVivoPage() {
 
       {/* Próxima sesión */}
       <div className="card relative overflow-hidden p-6">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand/20 blur-3xl" />
         <span className="inline-flex items-center gap-1.5 rounded-full bg-neg/15 px-2.5 py-1 text-xs font-medium text-neg">
           <Radio className="h-3.5 w-3.5" /> Próxima sesión en vivo
         </span>

@@ -12,8 +12,8 @@ export default function ComunidadPage() {
   return (
     <div className="space-y-6 animate-fade-up">
       <div>
-        <p className="text-sm text-muted">Aprende en compañía</p>
         <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Comunidad</h1>
+        <p className="mt-1 text-sm text-muted">El grupo privado de alumnos de Angel.</p>
       </div>
 
       <a
@@ -22,7 +22,6 @@ export default function ComunidadPage() {
         rel="noopener noreferrer"
         className="card group relative flex flex-col items-center gap-4 overflow-hidden p-10 text-center transition-colors hover:border-brand/40"
       >
-        <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-brand/20 blur-3xl" />
         <span className="grid h-16 w-16 place-items-center rounded-2xl bg-brand text-black shadow-glow">
           <MessageCircle className="h-8 w-8" />
         </span>

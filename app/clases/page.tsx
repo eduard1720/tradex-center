@@ -13,7 +13,6 @@ export default async function ClasesPage() {
     <div className="space-y-6 animate-fade-up">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted">Ruta de aprendizaje</p>
           <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
             Clases por módulos
           </h1>

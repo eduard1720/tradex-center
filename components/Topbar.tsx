@@ -47,26 +47,33 @@ export function Topbar() {
           <div className="relative">
             <button
               onClick={() => setMenu((m) => !m)}
-              className="flex items-center gap-2 rounded-xl border border-line bg-card-soft px-2.5 py-1.5 text-sm"
+              className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 text-sm transition-colors hover:bg-white/[0.05]"
             >
-              <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand/20 text-xs font-bold text-brand">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-brand/15 text-[11px] font-semibold text-brand">
                 {initials(name)}
               </span>
-              <span className="hidden text-white/90 sm:block">{name}</span>
-              <ChevronDown className="hidden h-4 w-4 text-muted sm:block" />
+              <span className="hidden font-medium text-white/90 sm:block">{name}</span>
+              <ChevronDown
+                className={`hidden h-4 w-4 text-muted transition-transform duration-150 sm:block ${
+                  menu ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {menu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setMenu(false)} />
-                <div className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-line bg-bg-soft py-1 shadow-xl">
-                  <p className="px-3 py-2 text-xs text-muted">
-                    {isAdmin ? "Sesión de instructor" : "Sesión de alumno"}
-                  </p>
+                <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-line bg-bg-soft shadow-xl">
+                  <div className="px-4 py-3">
+                    <p className="truncate text-sm font-medium text-white">{name}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {isAdmin ? "Instructor" : "Alumno"}
+                    </p>
+                  </div>
                   <div className="h-px bg-line" />
                   <button
                     onClick={signOut}
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-white/90 hover:bg-card-hover"
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-white/90 transition-colors hover:bg-white/[0.05]"
                   >
                     <LogOut className="h-4 w-4 text-muted" /> Cerrar sesión
                   </button>

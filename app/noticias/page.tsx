@@ -10,7 +10,6 @@ export default function NoticiasPage() {
     <div className="space-y-6 animate-fade-up">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted">Calendario económico en tiempo real</p>
           <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
             Noticias del mercado
           </h1>

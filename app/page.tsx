@@ -21,10 +21,10 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 animate-fade-up">
       <div className="text-center">
-        <p className="text-sm text-muted">Bienvenido a {SITE.name} 👋</p>
         <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
           Un mensaje de Angel para ti
         </h1>
+        <p className="mt-1 text-sm text-muted">Bienvenido a {SITE.name}</p>
       </div>
 
       <WelcomeVideo initialUrl={welcomeUrl} />

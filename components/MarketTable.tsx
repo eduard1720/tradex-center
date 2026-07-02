@@ -54,7 +54,7 @@ const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFra
 function pct(n: number) {
   const positive = n >= 0;
   return (
-    <span className={positive ? "text-pos" : "text-neg"}>
+    <span className={`font-mono tabular-nums ${positive ? "text-pos" : "text-neg"}`}>
       {positive ? "+" : ""}
       {n.toFixed(2)}%
     </span>
@@ -142,7 +142,7 @@ export function MarketTable() {
           {movers.map((m) => (
             <div key={m.symbol} className="card p-4">
               <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-brand/15 text-[11px] font-bold text-brand">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/[0.06] text-[11px] font-semibold text-white/80">
                   {m.symbol.slice(0, 3)}
                 </span>
                 <div className="leading-tight">
@@ -156,7 +156,7 @@ export function MarketTable() {
                 )}
               </div>
               <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="font-medium text-white">${price(m.price)}</span>
+                <span className="font-mono font-medium tabular-nums text-white">${price(m.price)}</span>
                 {pct(m.changePct)}
               </div>
             </div>
@@ -181,7 +181,7 @@ export function MarketTable() {
                 <tr key={c.symbol} className="border-t border-line hover:bg-card-hover/50">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <span className="grid h-8 w-8 place-items-center rounded-full bg-brand/15 text-[11px] font-bold text-brand">
+                      <span className="grid h-8 w-8 place-items-center rounded-full bg-white/[0.06] text-[11px] font-semibold text-white/80">
                         {c.symbol.slice(0, 3)}
                       </span>
                       <div className="leading-tight">
@@ -190,9 +190,9 @@ export function MarketTable() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-3.5 text-right font-medium text-white">${price(c.price)}</td>
+                  <td className="px-3 py-3.5 text-right font-mono font-medium tabular-nums text-white">${price(c.price)}</td>
                   <td className="px-3 py-3.5 text-right">{pct(c.changePct)}</td>
-                  <td className="px-5 py-3.5 text-right text-muted">${compact.format(c.volume)}</td>
+                  <td className="px-5 py-3.5 text-right font-mono tabular-nums text-muted">${compact.format(c.volume)}</td>
                 </tr>
               ))}
             </tbody>

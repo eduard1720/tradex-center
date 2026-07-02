@@ -23,17 +23,17 @@ function NavLink({
     <Link
       href={item.href}
       title={collapsed ? item.label : undefined}
-      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
+      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-150 ${
         active
-          ? "bg-brand-soft text-white"
-          : "text-muted hover:bg-card-hover hover:text-white"
+          ? "bg-white/[0.06] text-white"
+          : "text-muted hover:bg-white/[0.04] hover:text-white"
       } ${collapsed ? "justify-center" : ""}`}
     >
       {active && (
         <span className="absolute left-0 top-1/2 h-5 -translate-y-1/2 rounded-r-full bg-brand" style={{ width: 3 }} />
       )}
-      <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-brand" : ""}`} />
-      {!collapsed && <span className="truncate font-medium">{item.label}</span>}
+      <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${active ? "text-brand" : "text-muted/80 group-hover:text-white/80"}`} />
+      {!collapsed && <span className={`truncate ${active ? "font-medium" : "font-normal"}`}>{item.label}</span>}
     </Link>
   );
 }
@@ -58,18 +58,13 @@ export function Sidebar() {
 
       <button
         onClick={() => setCollapsed((c) => !c)}
-        className="mt-5 mb-3 flex items-center gap-2 self-end rounded-lg border border-line p-1.5 text-muted hover:text-white"
+        className="mt-4 mb-2 flex items-center gap-2 self-end rounded-lg p-1.5 text-muted/70 transition-colors hover:bg-white/[0.04] hover:text-white"
         aria-label="Colapsar menú"
       >
         {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
       </button>
 
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
-        {!collapsed && (
-          <p className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted/60">
-            Menú
-          </p>
-        )}
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
         {MAIN_NAV.map((item) => (
           <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} />
         ))}
@@ -79,7 +74,7 @@ export function Sidebar() {
           <>
             <div className="my-3 h-px bg-line" />
             {!collapsed && (
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted/60">
+              <p className="px-3 pb-1 text-[10px] font-medium uppercase tracking-wider text-muted/50">
                 Instructor
               </p>
             )}

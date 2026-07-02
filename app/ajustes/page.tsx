@@ -6,7 +6,6 @@ export default function AjustesPage() {
   return (
     <div className="space-y-6 animate-fade-up">
       <div>
-        <p className="text-sm text-muted">Tu cuenta</p>
         <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Ajustes</h1>
       </div>
 
