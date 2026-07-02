@@ -8,13 +8,21 @@ export default async function SubirPage() {
   const classes = await getAllClasses();
 
   // Módulos existentes (derivados de las clases), para poder añadirles clases.
-  const map = new Map<number, string>();
+  const map = new Map<number, { title: string; thumbnail: string }>();
   for (const c of classes) {
     if (c.module <= 0) continue;
-    if (!map.has(c.module)) map.set(c.module, c.moduleTitle || `Módulo ${c.module}`);
+    const cur = map.get(c.module);
+    if (!cur) {
+      map.set(c.module, {
+        title: c.moduleTitle || `Módulo ${c.module}`,
+        thumbnail: c.moduleThumbnail || c.thumbnail || "",
+      });
+    } else if (!cur.thumbnail && (c.moduleThumbnail || c.thumbnail)) {
+      cur.thumbnail = c.moduleThumbnail || c.thumbnail;
+    }
   }
   const modules = [...map.entries()]
-    .map(([module, title]) => ({ module, title }))
+    .map(([module, v]) => ({ module, title: v.title, thumbnail: v.thumbnail }))
     .sort((a, b) => a.module - b.module);
 
   return (

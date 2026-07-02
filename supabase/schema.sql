@@ -24,6 +24,9 @@ create table if not exists public.classes (
 alter table public.classes add column if not exists module       integer not null default 0;
 alter table public.classes add column if not exists module_title text not null default '';
 alter table public.classes add column if not exists lesson_order integer not null default 0;
+-- Miniatura personalizada de la clase y del módulo (vacío = se genera automática).
+alter table public.classes add column if not exists thumbnail_custom text not null default '';
+alter table public.classes add column if not exists module_thumbnail text not null default '';
 -- La duración de clases se eliminó: la columna queda opcional (puede ser null).
 alter table public.classes alter column duration_min drop not null;
 
@@ -95,6 +98,11 @@ create policy "Lectura publica recursos"
 -- Bucket de Storage público donde se guardan los archivos de Herramientas.
 insert into storage.buckets (id, name, public)
 values ('herramientas', 'herramientas', true)
+on conflict (id) do nothing;
+
+-- Bucket de Storage público para las miniaturas de clases y módulos.
+insert into storage.buckets (id, name, public)
+values ('thumbnails', 'thumbnails', true)
 on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------------------

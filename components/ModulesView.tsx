@@ -12,15 +12,18 @@ import {
   ArrowLeft,
   Pencil,
   Trash2,
+  Image as ImageIcon,
 } from "lucide-react";
 import type { TradingClass } from "@/lib/types";
 import { getCompleted, onProgressChange } from "@/lib/progress";
 import { useAdmin, getAdminPw } from "@/lib/admin";
 import { ClassEditModal } from "@/components/ClassEditModal";
+import { ModuleThumbnailModal } from "@/components/ModuleThumbnailModal";
 
 interface ModuleGroup {
   module: number;
   title: string;
+  thumbnail: string;
   lessons: TradingClass[];
 }
 
@@ -29,9 +32,16 @@ function buildModules(classes: TradingClass[]): ModuleGroup[] {
   for (const c of classes) {
     if (c.module <= 0) continue; // las clases en vivo no entran en módulos
     if (!map.has(c.module)) {
-      map.set(c.module, { module: c.module, title: c.moduleTitle || `Módulo ${c.module}`, lessons: [] });
+      map.set(c.module, {
+        module: c.module,
+        title: c.moduleTitle || `Módulo ${c.module}`,
+        thumbnail: "",
+        lessons: [],
+      });
     }
-    map.get(c.module)!.lessons.push(c);
+    const g = map.get(c.module)!;
+    g.lessons.push(c);
+    if (!g.thumbnail && c.moduleThumbnail) g.thumbnail = c.moduleThumbnail;
   }
   const groups = [...map.values()].sort((a, b) => a.module - b.module);
   for (const g of groups) g.lessons.sort((a, b) => a.order - b.order);
@@ -45,6 +55,7 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
   const isAdmin = useAdmin();
   const router = useRouter();
   const [editing, setEditing] = useState<TradingClass | null>(null);
+  const [editThumb, setEditThumb] = useState<ModuleGroup | null>(null);
   const [openModule, setOpenModule] = useState<number | null>(null);
 
   useEffect(() => {
@@ -140,6 +151,13 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                     <button
+                      onClick={() => setEditThumb(detail)}
+                      title="Cambiar miniatura del módulo"
+                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted transition-colors hover:text-white"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" />
+                    </button>
+                    <button
                       onClick={() => deleteModuleHandler(detail.module)}
                       title="Eliminar módulo"
                       className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted transition-colors hover:border-neg/40 hover:text-neg"
@@ -217,6 +235,20 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
             }}
           />
         )}
+
+        {editThumb && (
+          <ModuleThumbnailModal
+            module={editThumb.module}
+            title={editThumb.title}
+            current={editThumb.thumbnail}
+            fallback={editThumb.lessons.find((l) => l.thumbnail)?.thumbnail ?? ""}
+            onClose={() => setEditThumb(null)}
+            onSaved={() => {
+              setEditThumb(null);
+              router.refresh();
+            }}
+          />
+        )}
       </>
     );
   }
@@ -229,7 +261,7 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
         const doneCount = doneCountOf(g);
         const pct = Math.round((doneCount / g.lessons.length) * 100);
         const done = doneCount === g.lessons.length;
-        const cover = g.lessons.find((l) => l.thumbnail)?.thumbnail;
+        const cover = g.thumbnail || g.lessons.find((l) => l.thumbnail)?.thumbnail;
 
         return (
           <button

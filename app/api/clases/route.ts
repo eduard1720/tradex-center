@@ -39,6 +39,8 @@ export async function POST(req: Request) {
   const instructor = String(body.instructor ?? "Angel Hurtado").trim() || "Angel Hurtado";
   const moduleNum = Math.max(0, Math.round(Number(body.module) || 0));
   const moduleTitle = String(body.moduleTitle ?? "").trim();
+  const thumbnailCustom = String(body.thumbnailCustom ?? "").trim();
+  const moduleThumbnail = String(body.moduleThumbnail ?? "").trim();
   const tags = Array.isArray(body.tags)
     ? (body.tags as unknown[]).map((t) => String(t).trim()).filter(Boolean)
     : String(body.tags ?? "")
@@ -69,6 +71,8 @@ export async function POST(req: Request) {
       tags,
       module: moduleNum,
       moduleTitle,
+      thumbnailCustom,
+      moduleThumbnail,
     });
     return NextResponse.json({ class: created }, { status: 201 });
   } catch (err) {
@@ -122,6 +126,8 @@ export async function PATCH(req: Request) {
   }
   if (body.module !== undefined) patch.module = Math.max(0, Math.round(Number(body.module) || 0));
   if (typeof body.moduleTitle === "string") patch.moduleTitle = body.moduleTitle.trim();
+  if (typeof body.thumbnailCustom === "string") patch.thumbnailCustom = body.thumbnailCustom.trim();
+  if (typeof body.moduleThumbnail === "string") patch.moduleThumbnail = body.moduleThumbnail.trim();
   if (body.tags !== undefined) {
     patch.tags = Array.isArray(body.tags)
       ? (body.tags as unknown[]).map((t) => String(t).trim()).filter(Boolean)

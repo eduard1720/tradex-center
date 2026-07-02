@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { renameModule, deleteModule } from "@/lib/data";
+import { renameModule, deleteModule, setModuleThumbnail } from "@/lib/data";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "angel-admin";
 
@@ -19,9 +19,24 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
   const module = Math.round(Number(body.module));
+  if (!module) {
+    return NextResponse.json({ error: "Falta el módulo." }, { status: 422 });
+  }
+
+  // Cambio de miniatura del módulo (puede venir vacío para volver a la automática).
+  if (typeof body.thumbnail === "string") {
+    try {
+      await setModuleThumbnail(module, body.thumbnail.trim());
+      return NextResponse.json({ ok: true });
+    } catch (err) {
+      console.error("Error al actualizar la miniatura del módulo:", err);
+      return NextResponse.json({ error: "No se pudo actualizar la miniatura." }, { status: 500 });
+    }
+  }
+
   const title = String(body.title ?? "").trim();
-  if (!module || !title) {
-    return NextResponse.json({ error: "Módulo y título son obligatorios." }, { status: 422 });
+  if (!title) {
+    return NextResponse.json({ error: "El título es obligatorio." }, { status: 422 });
   }
   try {
     await renameModule(module, title);

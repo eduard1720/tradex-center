@@ -17,10 +17,12 @@ import {
 import { CATEGORIES, LEVELS } from "@/lib/types";
 import { parseVideo } from "@/lib/video";
 import { useAdmin, getAdminPw, loginAdmin, logoutAdmin } from "@/lib/admin";
+import { ImagePicker } from "@/components/ImagePicker";
 
 interface ModuleOption {
   module: number;
   title: string;
+  thumbnail?: string;
 }
 
 const empty = {
@@ -33,6 +35,8 @@ const empty = {
   tags: "",
   module: "1",
   moduleTitle: "",
+  thumbnailCustom: "",
+  moduleThumbnail: "",
 };
 
 export function UploadForm({ modules = [] }: { modules?: ModuleOption[] }) {
@@ -81,7 +85,12 @@ export function UploadForm({ modules = [] }: { modules?: ModuleOption[] }) {
 
   // Continúa hacia el paso 2 usando un módulo que ya existe.
   function useExistingModule(m: ModuleOption) {
-    setForm((f) => ({ ...f, module: String(m.module), moduleTitle: m.title }));
+    setForm((f) => ({
+      ...f,
+      module: String(m.module),
+      moduleTitle: m.title,
+      moduleThumbnail: m.thumbnail ?? "",
+    }));
     setModError("");
     setStep("lesson");
   }
@@ -214,6 +223,11 @@ export function UploadForm({ modules = [] }: { modules?: ModuleOption[] }) {
                 />
               </div>
             </div>
+            <ImagePicker
+              label="Miniatura del módulo (opcional)"
+              value={form.moduleThumbnail}
+              onChange={(url) => set("moduleThumbnail", url)}
+            />
             {modError && <p className="text-xs text-neg">{modError}</p>}
             <button type="submit" className="btn-primary w-full">
               <Plus className="h-4 w-4" /> Crear módulo y continuar
@@ -311,6 +325,13 @@ export function UploadForm({ modules = [] }: { modules?: ModuleOption[] }) {
           )}
         </div>
 
+        <ImagePicker
+          label="Miniatura de la clase (opcional)"
+          value={form.thumbnailCustom}
+          onChange={(url) => set("thumbnailCustom", url)}
+          fallback={validVideo ? parsed.thumbnail : ""}
+        />
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="label">Categoría</label>
@@ -355,9 +376,13 @@ export function UploadForm({ modules = [] }: { modules?: ModuleOption[] }) {
         <div className="card p-5">
           <h2 className="mb-3 text-base font-semibold text-white">Vista previa</h2>
           <div className="relative aspect-video overflow-hidden rounded-xl border border-line bg-card-soft">
-            {validVideo && parsed.thumbnail ? (
+            {form.thumbnailCustom || (validVideo && parsed.thumbnail) ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={parsed.thumbnail} alt="preview" className="h-full w-full object-cover" />
+              <img
+                src={form.thumbnailCustom || parsed.thumbnail}
+                alt="preview"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <div className="grid h-full place-items-center text-center text-xs text-muted">
                 La miniatura aparecerá<br />al pegar un link válido

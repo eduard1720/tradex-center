@@ -8,7 +8,9 @@ import type { NewClassInput, TradingClass } from "./types";
 /*  Seed data (used by the JSON fallback and by supabase/schema.sql)          */
 /* -------------------------------------------------------------------------- */
 
-function rawSeed(): NewClassInput[] {
+type SeedInput = Omit<NewClassInput, "thumbnailCustom" | "moduleThumbnail">;
+
+function rawSeed(): SeedInput[] {
   return [
     {
       title: "Cómo leer un gráfico de velas desde cero",
@@ -109,7 +111,7 @@ function rawSeed(): NewClassInput[] {
   ];
 }
 
-function hydrate(input: NewClassInput, idx: number): TradingClass {
+function hydrate(input: SeedInput, idx: number): TradingClass {
   const parsed = parseVideo(input.videoUrl);
   const created = new Date(Date.now() - idx * 36 * 60 * 60 * 1000);
   return {
@@ -117,6 +119,8 @@ function hydrate(input: NewClassInput, idx: number): TradingClass {
     id: `cl_${(idx + 1).toString().padStart(3, "0")}`,
     embedUrl: parsed.embedUrl,
     thumbnail: parsed.thumbnail,
+    thumbnailCustom: "",
+    moduleThumbnail: "",
     createdAt: created.toISOString(),
     order: 0, // se asigna en assignOrders()
   };
@@ -140,11 +144,14 @@ function nextOrder(existing: TradingClass[], module: number): number {
 
 function buildEntry(input: NewClassInput, order: number): TradingClass {
   const parsed = parseVideo(input.videoUrl);
+  const custom = (input.thumbnailCustom ?? "").trim();
   return {
     ...input,
     id: `cl_${Date.now().toString(36)}`,
     embedUrl: parsed.embedUrl,
-    thumbnail: parsed.thumbnail,
+    thumbnail: custom || parsed.thumbnail,
+    thumbnailCustom: custom,
+    moduleThumbnail: input.moduleThumbnail ?? "",
     createdAt: new Date().toISOString(),
     order,
   };
@@ -169,9 +176,14 @@ interface Row {
   module: number | null;
   module_title: string | null;
   lesson_order: number | null;
+  thumbnail_custom: string | null;
+  module_thumbnail: string | null;
 }
 
 function rowToClass(r: Row): TradingClass {
+  const custom = (r.thumbnail_custom ?? "").trim();
+  // La miniatura efectiva se recalcula siempre: personalizada o la del video.
+  const effective = custom || parseVideo(r.video_url).thumbnail;
   return {
     id: r.id,
     title: r.title,
@@ -180,7 +192,9 @@ function rowToClass(r: Row): TradingClass {
     level: r.level as TradingClass["level"],
     videoUrl: r.video_url,
     embedUrl: r.embed_url,
-    thumbnail: r.thumbnail,
+    thumbnail: effective,
+    thumbnailCustom: custom,
+    moduleThumbnail: r.module_thumbnail ?? "",
     instructor: r.instructor,
     tags: r.tags ?? [],
     createdAt: r.created_at,
@@ -206,6 +220,8 @@ function classToRow(c: TradingClass): Row {
     module: c.module,
     module_title: c.moduleTitle,
     lesson_order: c.order,
+    thumbnail_custom: c.thumbnailCustom,
+    module_thumbnail: c.moduleThumbnail,
   };
 }
 
@@ -220,17 +236,17 @@ export type ClassPatch = Partial<
     | "moduleTitle"
     | "tags"
     | "videoUrl"
+    | "thumbnailCustom"
+    | "moduleThumbnail"
   >
 >;
 
-/** Aplica un patch (con re-derivado del video si cambia videoUrl). */
+/** Aplica un patch (recalculando embed y miniatura efectiva). */
 function applyPatch(cur: TradingClass, patch: ClassPatch): TradingClass {
   const next: TradingClass = { ...cur, ...patch };
-  if (patch.videoUrl !== undefined) {
-    const p = parseVideo(patch.videoUrl);
-    next.embedUrl = p.embedUrl;
-    next.thumbnail = p.thumbnail;
-  }
+  const p = parseVideo(next.videoUrl);
+  next.embedUrl = p.embedUrl;
+  next.thumbnail = (next.thumbnailCustom ?? "").trim() || p.thumbnail;
   return next;
 }
 
@@ -244,6 +260,8 @@ function patchToRow(patch: ClassPatch): Record<string, unknown> {
   if (patch.module !== undefined) upd.module = patch.module;
   if (patch.moduleTitle !== undefined) upd.module_title = patch.moduleTitle;
   if (patch.tags !== undefined) upd.tags = patch.tags;
+  if (patch.thumbnailCustom !== undefined) upd.thumbnail_custom = patch.thumbnailCustom;
+  if (patch.moduleThumbnail !== undefined) upd.module_thumbnail = patch.moduleThumbnail;
   if (patch.videoUrl !== undefined) {
     const p = parseVideo(patch.videoUrl);
     upd.video_url = patch.videoUrl;
@@ -291,6 +309,13 @@ const sb = {
     const { error } = await getSupabase()
       .from("classes")
       .update({ module_title: title })
+      .eq("module", module);
+    if (error) throw new Error(error.message);
+  },
+  async setModuleThumbnail(module: number, url: string): Promise<void> {
+    const { error } = await getSupabase()
+      .from("classes")
+      .update({ module_thumbnail: url })
       .eq("module", module);
     if (error) throw new Error(error.message);
   },
@@ -360,6 +385,13 @@ const json = {
       .map((c) => (c.module === module ? { ...c, moduleTitle: title } : c));
     fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), "utf-8");
   },
+  setModuleThumbnail(module: number, url: string): void {
+    ensureFile();
+    const list = json
+      .getAll()
+      .map((c) => (c.module === module ? { ...c, moduleThumbnail: url } : c));
+    fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), "utf-8");
+  },
   removeModule(module: number): void {
     ensureFile();
     const list = json.getAll().filter((c) => c.module !== module);
@@ -397,6 +429,11 @@ export async function deleteClass(id: string): Promise<void> {
 export async function renameModule(module: number, title: string): Promise<void> {
   if (hasSupabase()) await sb.renameModule(module, title);
   else json.renameModule(module, title);
+}
+
+export async function setModuleThumbnail(module: number, url: string): Promise<void> {
+  if (hasSupabase()) await sb.setModuleThumbnail(module, url);
+  else json.setModuleThumbnail(module, url);
 }
 
 export async function deleteModule(module: number): Promise<void> {

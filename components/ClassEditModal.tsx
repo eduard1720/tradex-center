@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { X, Save, Loader2 } from "lucide-react";
 import { CATEGORIES, LEVELS, type TradingClass } from "@/lib/types";
 import { getAdminPw } from "@/lib/admin";
+import { parseVideo } from "@/lib/video";
+import { ImagePicker } from "@/components/ImagePicker";
 
 export function ClassEditModal({
   cls,
@@ -23,11 +25,13 @@ export function ClassEditModal({
     module: String(cls.module),
     moduleTitle: cls.moduleTitle,
     tags: cls.tags.join(", "),
+    thumbnailCustom: cls.thumbnailCustom,
   });
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [error, setError] = useState("");
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const autoThumb = useMemo(() => parseVideo(form.videoUrl).thumbnail, [form.videoUrl]);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -85,6 +89,12 @@ export function ClassEditModal({
             <label className="label">Link del video</label>
             <input className="input" value={form.videoUrl} onChange={(e) => set("videoUrl", e.target.value)} />
           </div>
+          <ImagePicker
+            label="Miniatura de la clase"
+            value={form.thumbnailCustom}
+            onChange={(url) => set("thumbnailCustom", url)}
+            fallback={autoThumb}
+          />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="label">Categoría</label>

@@ -27,8 +27,12 @@ export interface TradingClass {
   videoUrl: string;
   /** Normalized embeddable URL. */
   embedUrl: string;
-  /** Thumbnail derived from the video provider. */
+  /** Miniatura efectiva que se muestra (personalizada si existe, si no la del video). */
   thumbnail: string;
+  /** Miniatura personalizada que subió/pegó Angel (vacío = usar la del video). */
+  thumbnailCustom: string;
+  /** Miniatura del módulo al que pertenece (vacío = usar la de la 1ª clase). */
+  moduleThumbnail: string;
   instructor: string;
   tags: string[];
   createdAt: string;
@@ -45,3 +49,4 @@ export type NewClassInput = Omit<
   TradingClass,
   "id" | "embedUrl" | "thumbnail" | "createdAt" | "order"
 >;
+// thumbnailCustom y moduleThumbnail sí forman parte de la entrada (opcionales: "").
