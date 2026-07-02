@@ -2,10 +2,26 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Upload, CheckCircle2, AlertCircle, Youtube, Loader2, Lock } from "lucide-react";
+import {
+  Upload,
+  CheckCircle2,
+  AlertCircle,
+  Youtube,
+  Loader2,
+  Lock,
+  Layers,
+  Plus,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 import { CATEGORIES, LEVELS } from "@/lib/types";
 import { parseVideo } from "@/lib/video";
 import { useAdmin, getAdminPw, loginAdmin, logoutAdmin } from "@/lib/admin";
+
+interface ModuleOption {
+  module: number;
+  title: string;
+}
 
 const empty = {
   title: "",
@@ -19,11 +35,19 @@ const empty = {
   moduleTitle: "",
 };
 
-export function UploadForm() {
+export function UploadForm({ modules = [] }: { modules?: ModuleOption[] }) {
   const router = useRouter();
-  const [form, setForm] = useState(empty);
+  const nextModule = useMemo(
+    () => modules.reduce((m, x) => Math.max(m, x.module), 0) + 1,
+    [modules]
+  );
+  const [form, setForm] = useState(() => ({ ...empty, module: String(nextModule) }));
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [message, setMessage] = useState("");
+
+  // Asistente en 2 pasos: primero el módulo, luego la clase.
+  const [step, setStep] = useState<"module" | "lesson">("module");
+  const [modError, setModError] = useState("");
 
   // --- Puerta de administrador -------------------------------------------
   const isAdmin = useAdmin();
@@ -35,6 +59,32 @@ export function UploadForm() {
   const validVideo = parsed.provider !== "unknown";
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Paso 1 → paso 2: crea un módulo nuevo con el número y nombre indicados.
+  function createModule(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.module.trim() || Number(form.module) <= 0) {
+      setModError("Indica un número de módulo válido (1, 2, 3...).");
+      return;
+    }
+    if (!form.moduleTitle.trim()) {
+      setModError("Ponle un nombre al módulo.");
+      return;
+    }
+    if (modules.some((m) => m.module === Number(form.module))) {
+      setModError(`El módulo ${form.module} ya existe. Elígelo abajo para añadirle clases.`);
+      return;
+    }
+    setModError("");
+    setStep("lesson");
+  }
+
+  // Continúa hacia el paso 2 usando un módulo que ya existe.
+  function useExistingModule(m: ModuleOption) {
+    setForm((f) => ({ ...f, module: String(m.module), moduleTitle: m.title }));
+    setModError("");
+    setStep("lesson");
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -127,11 +177,98 @@ export function UploadForm() {
     );
   }
 
+  // -------------------------- Paso 1: crear/elegir módulo -----------------
+  if (step === "module") {
+    return (
+      <div className="mx-auto max-w-2xl space-y-5">
+        <div className="card space-y-5 p-6">
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-soft text-brand">
+              <Layers className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-muted">Paso 1 de 2</p>
+              <h2 className="text-base font-semibold text-white">Crea un nuevo módulo</h2>
+            </div>
+          </div>
+
+          <form onSubmit={createModule} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label className="label">N° de módulo</label>
+                <input
+                  type="number"
+                  min={1}
+                  className="input"
+                  value={form.module}
+                  onChange={(e) => set("module", e.target.value)}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="label">Nombre del módulo</label>
+                <input
+                  className="input"
+                  placeholder="Ej: Fundamentos del Trading"
+                  value={form.moduleTitle}
+                  onChange={(e) => set("moduleTitle", e.target.value)}
+                />
+              </div>
+            </div>
+            {modError && <p className="text-xs text-neg">{modError}</p>}
+            <button type="submit" className="btn-primary w-full">
+              <Plus className="h-4 w-4" /> Crear módulo y continuar
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+
+        {modules.length > 0 && (
+          <div className="card space-y-3 p-6">
+            <h3 className="text-sm font-semibold text-white">O añade una clase a un módulo existente</h3>
+            <div className="flex flex-col gap-2">
+              {modules.map((m) => (
+                <button
+                  key={m.module}
+                  type="button"
+                  onClick={() => useExistingModule(m)}
+                  className="group flex items-center gap-3 rounded-xl border border-line bg-card-soft/40 px-4 py-3 text-left transition-colors hover:border-white/15"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand text-sm font-bold text-black">
+                    {m.module}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-white">{m.title}</p>
+                    <p className="text-[11px] text-muted">Módulo {m.module}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ------------------------------ Paso 2: subir la clase --------------------
   return (
     <form onSubmit={onSubmit} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
       {/* Main fields */}
       <div className="card space-y-5 p-6 lg:col-span-2">
-        <h2 className="text-base font-semibold text-white">Datos de la clase</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-white">Datos de la clase</h2>
+          <div className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-medium text-brand">
+            <Layers className="h-3.5 w-3.5" /> Módulo {form.module}
+            {form.moduleTitle ? ` · ${form.moduleTitle}` : ""}
+            <button
+              type="button"
+              onClick={() => setStep("module")}
+              className="ml-1 inline-flex items-center gap-1 text-muted hover:text-white"
+            >
+              <ArrowLeft className="h-3 w-3" /> Cambiar
+            </button>
+          </div>
+        </div>
 
         <div>
           <label className="label">Título de la clase</label>
@@ -211,35 +348,6 @@ export function UploadForm() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-line bg-card-soft/40 p-4">
-          <p className="mb-3 text-sm font-medium text-white">Módulo del curso</p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label className="label">N° de módulo</label>
-              <input
-                type="number"
-                min={0}
-                className="input"
-                placeholder="1"
-                value={form.module}
-                onChange={(e) => set("module", e.target.value)}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="label">Nombre del módulo</label>
-              <input
-                className="input"
-                placeholder="Ej: Fundamentos del Trading"
-                value={form.moduleTitle}
-                onChange={(e) => set("moduleTitle", e.target.value)}
-              />
-            </div>
-          </div>
-          <p className="mt-2 text-[11px] text-muted">
-            Usa <strong>módulo 0</strong> para clases en vivo (no entran en la ruta de módulos).
-            El orden dentro del módulo se asigna automáticamente.
-          </p>
-        </div>
       </div>
 
       {/* Summary / preview */}
