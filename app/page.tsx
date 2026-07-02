@@ -45,12 +45,12 @@ export default async function DashboardPage() {
             {featured.map((c) => (
               <div key={c.id} className="card relative p-5">
                 <Quote className="absolute right-4 top-4 h-7 w-7 text-brand/15" />
-                <p className="text-sm leading-relaxed text-white/90">“{c.body}”</p>
+                <p className="line-clamp-6 break-words pr-6 text-sm leading-relaxed text-white/90">“{c.body}”</p>
                 <div className="mt-4 flex items-center gap-3 border-t border-line pt-3">
-                  <span className="grid h-9 w-9 place-items-center rounded-full bg-brand/20 text-xs font-bold text-brand">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/[0.06] text-xs font-semibold text-white/80">
                     {initials(c.authorName)}
                   </span>
-                  <p className="text-sm font-medium text-white">{c.authorName}</p>
+                  <p className="min-w-0 truncate text-sm font-medium text-white">{c.authorName}</p>
                 </div>
               </div>
             ))}

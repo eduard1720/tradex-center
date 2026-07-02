@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   MessageSquareQuote,
   Loader2,
@@ -10,6 +11,7 @@ import {
   Trash2,
   ShieldCheck,
   Plus,
+  X,
 } from "lucide-react";
 import { useAdmin, getAdminPw } from "@/lib/admin";
 import { useStudent, getStudentCode } from "@/lib/student";
@@ -39,6 +41,9 @@ export function CommentsBoard() {
   const [tSending, setTSending] = useState(false);
   const [tError, setTError] = useState("");
 
+  // Comentario abierto en el modal central (o null).
+  const [openComment, setOpenComment] = useState<Comment | null>(null);
+
   const load = useCallback(async () => {
     const res = await fetch("/api/comentarios", {
       cache: "no-store",
@@ -52,6 +57,16 @@ export function CommentsBoard() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Cerrar el modal con la tecla Escape.
+  useEffect(() => {
+    if (!openComment) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenComment(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openComment]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,21 +121,23 @@ export function CommentsBoard() {
     }
   }
 
-  async function moderate(id: number, approved: boolean) {
+  async function moderate(c: Comment, approved: boolean) {
     await fetch("/api/comentarios", {
       method: "PATCH",
       headers: { "Content-Type": "application/json", "x-admin-password": getAdminPw() ?? "" },
-      body: JSON.stringify({ id, approved }),
+      body: JSON.stringify({ id: c.id, approved }),
     });
+    setOpenComment((o) => (o && o.id === c.id ? { ...o, approved } : o));
     load();
   }
 
-  async function remove(id: number) {
+  async function remove(c: Comment) {
     if (!window.confirm("¿Eliminar este comentario?")) return;
-    await fetch(`/api/comentarios?id=${id}`, {
+    await fetch(`/api/comentarios?id=${c.id}`, {
       method: "DELETE",
       headers: { "x-admin-password": getAdminPw() ?? "" },
     });
+    setOpenComment((o) => (o && o.id === c.id ? null : o));
     load();
   }
 
@@ -212,53 +229,108 @@ export function CommentsBoard() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {comments.map((c) => (
-            <div
+            <button
               key={c.id}
-              className={`card relative p-5 ${isAdmin && !c.approved ? "border-dashed opacity-80" : ""}`}
+              onClick={() => setOpenComment(c)}
+              className={`card relative flex flex-col p-5 text-left transition-colors hover:border-white/15 ${
+                isAdmin && !c.approved ? "border-dashed opacity-80" : ""
+              }`}
             >
-              <p className="text-sm leading-relaxed text-white/90">“{c.body}”</p>
+              <p className="line-clamp-4 break-words text-sm leading-relaxed text-white/90">
+                “{c.body}”
+              </p>
               <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-brand/20 text-xs font-bold text-brand">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/[0.06] text-xs font-semibold text-white/80">
                   {initials(c.authorName)}
                 </span>
-                <div className="leading-tight">
-                  <p className="text-sm font-medium text-white">{c.authorName}</p>
+                <div className="min-w-0 leading-tight">
+                  <p className="truncate text-sm font-medium text-white">{c.authorName}</p>
                   <p className="text-xs text-muted">{formatDate(c.createdAt)}</p>
                 </div>
+                {isAdmin && (
+                  <span
+                    className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                      c.approved ? "bg-pos/10 text-pos" : "bg-card-soft text-muted"
+                    }`}
+                  >
+                    {c.approved ? "Visible" : "Oculto"}
+                  </span>
+                )}
               </div>
-
-              {isAdmin && (
-                <div className="mt-4 flex items-center gap-2 border-t border-line pt-3">
-                  {!c.approved ? (
-                    <span className="rounded-full bg-card-soft px-2 py-0.5 text-[11px] text-muted">
-                      Oculto
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-pos/10 px-2 py-0.5 text-[11px] text-pos">
-                      Visible
-                    </span>
-                  )}
-                  <div className="ml-auto flex items-center gap-1">
-                    <button
-                      onClick={() => moderate(c.id, !c.approved)}
-                      title={c.approved ? "Ocultar" : "Mostrar"}
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:text-white"
-                    >
-                      {c.approved ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                    <button
-                      onClick={() => remove(c.id)}
-                      title="Eliminar"
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:border-neg/40 hover:text-neg"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            </button>
           ))}
         </div>
+      )}
+
+      {/* Modal central con el comentario completo (portal al body para centrarlo
+          en toda la pantalla, escapando de cualquier ancestro con transform). */}
+      {openComment && typeof document !== "undefined" &&
+        createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setOpenComment(null)}
+          />
+          <div className="relative z-10 flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-line bg-bg-soft shadow-xl">
+            <div className="flex items-start gap-3 border-b border-line p-5">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/[0.06] text-sm font-semibold text-white/80">
+                {initials(openComment.authorName)}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-white">{openComment.authorName}</p>
+                <p className="text-xs text-muted">{formatDate(openComment.createdAt)}</p>
+              </div>
+              <button
+                onClick={() => setOpenComment(null)}
+                aria-label="Cerrar"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-5">
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-white/90">
+                {openComment.body}
+              </p>
+            </div>
+
+            {isAdmin && (
+              <div className="flex items-center gap-2 border-t border-line p-4">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                    openComment.approved ? "bg-pos/10 text-pos" : "bg-card-soft text-muted"
+                  }`}
+                >
+                  {openComment.approved ? "Visible" : "Oculto"}
+                </span>
+                <div className="ml-auto flex items-center gap-2">
+                  <button
+                    onClick={() => moderate(openComment, !openComment.approved)}
+                    className="btn-ghost !px-3 !py-2 text-xs"
+                  >
+                    {openComment.approved ? (
+                      <><EyeOff className="h-4 w-4" /> Ocultar</>
+                    ) : (
+                      <><Eye className="h-4 w-4" /> Mostrar</>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => remove(openComment)}
+                    className="btn-ghost !px-3 !py-2 text-xs text-neg hover:border-neg/40 hover:text-neg"
+                  >
+                    <Trash2 className="h-4 w-4" /> Eliminar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
