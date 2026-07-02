@@ -1,48 +1,23 @@
-"use client";
-
-import { useEffect, useRef } from "react";
-
 /**
- * Calendario económico de TradingView (embebible). Muestra las mismas noticias
- * de alto impacto que ForexFactory (NFP, FOMC, IPC, etc.), integrado al sitio.
+ * Calendario económico de Investing.com (widget embebible).
+ * Filtrado a Estados Unidos (countries=5), que es lo que mueve al dólar:
+ * NFP, FOMC, IPC, tasas de la Fed, etc. En español (lang=12).
+ * El widget de Investing.com se sirve con fondo claro; lo enmarcamos en
+ * blanco para que se vea intencional dentro del tema oscuro.
  */
+const SRC =
+  "https://sslecal2.investing.com/?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone&countries=5&calType=week&timeZone=46&lang=4";
+
 export function EconomicCalendar() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    container.innerHTML = "";
-
-    const widget = document.createElement("div");
-    widget.className = "tradingview-widget-container__widget";
-    container.appendChild(widget);
-
-    const script = document.createElement("script");
-    script.src =
-      "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      colorTheme: "dark",
-      isTransparent: false,
-      locale: "es",
-      countryFilter: "us", // solo noticias de Estados Unidos (dólar)
-      importanceFilter: "-1,0,1",
-      width: "100%",
-      height: 680,
-    });
-    container.appendChild(script);
-
-    return () => {
-      container.innerHTML = "";
-    };
-  }, []);
-
   return (
-    <div
-      ref={containerRef}
-      className="tradingview-widget-container"
-      style={{ minHeight: 680 }}
-    />
+    <div className="overflow-hidden rounded-xl bg-white">
+      <iframe
+        src={SRC}
+        title="Calendario económico de Estados Unidos (Investing.com)"
+        className="w-full"
+        style={{ height: 660, border: 0 }}
+        loading="lazy"
+      />
+    </div>
   );
 }
