@@ -58,6 +58,22 @@ export async function getActiveStudentByCode(code: string): Promise<Student | nu
   return rowToStudent(data as Row);
 }
 
+/**
+ * Busca un alumno por código SIN filtrar por estado. Permite distinguir en el
+ * login entre "código inexistente" y "cuenta bloqueada".
+ */
+export async function getStudentByCode(code: string): Promise<Student | null> {
+  const clean = code.trim().toUpperCase();
+  if (!clean) return null;
+  const { data, error } = await getSupabase()
+    .from("students")
+    .select("*")
+    .eq("code", clean)
+    .maybeSingle();
+  if (error || !data) return null;
+  return rowToStudent(data as Row);
+}
+
 export async function listStudents(): Promise<Student[]> {
   const { data, error } = await getSupabase()
     .from("students")

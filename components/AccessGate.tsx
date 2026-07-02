@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, Loader2, MessageCircle, ShieldCheck } from "lucide-react";
+import { Ban, Check, Loader2, MessageCircle, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { SITE, waLink } from "@/lib/site";
 import { useAdmin, loginAdmin } from "@/lib/admin";
@@ -160,6 +160,7 @@ function LoginScreen() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [blocked, setBlocked] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -167,13 +168,19 @@ function LoginScreen() {
     if (!value || loading) return;
     setLoading(true);
     setError("");
+    setBlocked(false);
     // La misma casilla sirve para Angel (admin) y para los alumnos:
     // primero probamos la clave de admin; si no coincide, validamos como alumno.
     const asAdmin = await loginAdmin(value);
     if (asAdmin) return; // AccessGate ya renderiza la app; el componente se desmonta.
     const res = await loginStudent(value);
     setLoading(false);
-    if (!res.ok) setError(res.error ?? "Código no válido.");
+    if (res.ok) return;
+    if (res.blocked) {
+      setBlocked(true);
+    } else {
+      setError(res.error ?? "Código no válido.");
+    }
   }
 
   return (
@@ -206,6 +213,7 @@ function LoginScreen() {
             onChange={(e) => {
               setCode(e.target.value);
               if (error) setError("");
+              if (blocked) setBlocked(false);
             }}
           />
           {error && (
@@ -227,6 +235,35 @@ function LoginScreen() {
             )}
           </button>
         </form>
+
+        {blocked && (
+          <div
+            role="alert"
+            className="mt-6 rounded-xl border border-neg/40 bg-neg/10 p-4"
+          >
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-neg/15 text-neg">
+                <Ban className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">Tu cuenta está bloqueada</p>
+                <p className="mt-1 text-xs leading-relaxed text-white/70">
+                  Angel suspendió el acceso a esta cuenta. Escríbele para reactivarlo.
+                </p>
+              </div>
+            </div>
+            <a
+              href={waLink(
+                `Hola Angel, mi cuenta en ${SITE.name} aparece bloqueada. ¿Puedes ayudarme a reactivar mi acceso?`
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary mt-3 w-full py-3"
+            >
+              <MessageCircle className="h-4 w-4" /> Contactar a Angel
+            </a>
+          </div>
+        )}
 
         <div className="mt-8 flex items-center justify-between gap-4 rounded-xl border border-line bg-card-soft/60 px-4 py-3.5">
           <div className="min-w-0 text-sm">

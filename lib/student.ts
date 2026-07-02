@@ -44,7 +44,7 @@ function persist(session: StudentSession) {
 /** Valida el código contra el servidor y, si es correcto, guarda la sesión. */
 export async function loginStudent(
   code: string
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; blocked?: boolean }> {
   try {
     const res = await fetch("/api/student/login", {
       method: "POST",
@@ -52,7 +52,12 @@ export async function loginStudent(
       body: JSON.stringify({ code }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { ok: false, error: data.error ?? "Código no válido." };
+    if (!res.ok)
+      return {
+        ok: false,
+        error: data.error ?? "Código no válido.",
+        blocked: Boolean(data.blocked),
+      };
     persist({ name: data.name, code, termsAccepted: Boolean(data.termsAccepted) });
     return { ok: true };
   } catch {

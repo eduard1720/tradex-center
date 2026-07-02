@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { hasSupabase } from "@/lib/supabase";
-import { getActiveStudentByCode } from "@/lib/students";
+import { getStudentByCode } from "@/lib/students";
 
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
@@ -23,11 +23,17 @@ export async function POST(req: Request) {
   }
 
   try {
-    const student = await getActiveStudentByCode(code);
+    const student = await getStudentByCode(code);
     if (!student) {
       return NextResponse.json(
-        { error: "Código incorrecto o cuenta desactivada. Contacta a Angel." },
+        { error: "Código incorrecto. Revisa el que te dio Angel." },
         { status: 401 }
+      );
+    }
+    if (!student.active) {
+      return NextResponse.json(
+        { error: "Tu cuenta está bloqueada.", blocked: true },
+        { status: 403 }
       );
     }
     return NextResponse.json({

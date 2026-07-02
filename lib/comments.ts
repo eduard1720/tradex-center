@@ -61,6 +61,23 @@ export async function addComment(input: {
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Testimonio creado por Angel (admin): nombre libre del alumno y aprobado de
+ * inmediato, para que aparezca sin depender de que el alumno lo escriba.
+ */
+export async function addTestimonial(input: {
+  authorName: string;
+  body: string;
+}): Promise<void> {
+  const { error } = await getSupabase().from("comments").insert({
+    student_id: null,
+    author_name: input.authorName,
+    body: input.body,
+    approved: true,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export async function setCommentApproved(id: number, approved: boolean): Promise<void> {
   const { error } = await getSupabase().from("comments").update({ approved }).eq("id", id);
   if (error) throw new Error(error.message);

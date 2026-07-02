@@ -3,6 +3,7 @@ import { hasSupabase } from "@/lib/supabase";
 import {
   listComments,
   addComment,
+  addTestimonial,
   setCommentApproved,
   deleteComment,
 } from "@/lib/comments";
@@ -26,11 +27,6 @@ export async function POST(req: Request) {
       { status: 503 }
     );
   }
-  const code = req.headers.get("x-student-code")?.trim();
-  if (!code) {
-    return NextResponse.json({ error: "Inicia sesión para comentar." }, { status: 401 });
-  }
-
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -39,7 +35,27 @@ export async function POST(req: Request) {
   }
   const text = String(body.body ?? "").trim();
   if (text.length < 3) {
-    return NextResponse.json({ error: "Escribe tu comentario." }, { status: 422 });
+    return NextResponse.json({ error: "Escribe el testimonio." }, { status: 422 });
+  }
+
+  // Angel (admin) crea un testimonio con nombre libre y aprobado al instante.
+  if (isAdmin(req)) {
+    const authorName = String(body.authorName ?? "").trim();
+    if (authorName.length < 2) {
+      return NextResponse.json({ error: "Escribe el nombre del alumno." }, { status: 422 });
+    }
+    try {
+      await addTestimonial({ authorName, body: text });
+      return NextResponse.json({ ok: true }, { status: 201 });
+    } catch (err) {
+      console.error("Error al guardar testimonio:", err);
+      return NextResponse.json({ error: "No se pudo guardar el testimonio." }, { status: 500 });
+    }
+  }
+
+  const code = req.headers.get("x-student-code")?.trim();
+  if (!code) {
+    return NextResponse.json({ error: "Inicia sesión para comentar." }, { status: 401 });
   }
 
   try {

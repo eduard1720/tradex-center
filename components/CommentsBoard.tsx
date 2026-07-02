@@ -9,6 +9,7 @@ import {
   EyeOff,
   Trash2,
   ShieldCheck,
+  Plus,
 } from "lucide-react";
 import { useAdmin, getAdminPw } from "@/lib/admin";
 import { useStudent, getStudentCode } from "@/lib/student";
@@ -31,6 +32,12 @@ export function CommentsBoard() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+
+  // Formulario de Angel para agregar un testimonio (aprobado al instante).
+  const [tName, setTName] = useState("");
+  const [tBody, setTBody] = useState("");
+  const [tSending, setTSending] = useState(false);
+  const [tError, setTError] = useState("");
 
   const load = useCallback(async () => {
     const res = await fetch("/api/comentarios", {
@@ -70,6 +77,32 @@ export function CommentsBoard() {
     } catch {
       setSending(false);
       setError("Error de red. Inténtalo de nuevo.");
+    }
+  }
+
+  async function addTestimonial(e: React.FormEvent) {
+    e.preventDefault();
+    if (tName.trim().length < 2 || tBody.trim().length < 3) return;
+    setTSending(true);
+    setTError("");
+    try {
+      const res = await fetch("/api/comentarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-password": getAdminPw() ?? "" },
+        body: JSON.stringify({ authorName: tName.trim(), body: tBody.trim() }),
+      });
+      setTSending(false);
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setTError(d.error ?? "No se pudo guardar.");
+        return;
+      }
+      setTName("");
+      setTBody("");
+      load();
+    } catch {
+      setTSending(false);
+      setTError("Error de red. Inténtalo de nuevo.");
     }
   }
 
@@ -119,11 +152,51 @@ export function CommentsBoard() {
       )}
 
       {isAdmin && (
-        <div className="card flex items-center gap-2 border-brand/30 p-4 text-sm text-muted">
-          <ShieldCheck className="h-4 w-4 text-brand" />
-          Modo Angel: aquí ves <strong className="text-white">todos</strong> los comentarios.
-          Muestra u oculta cuáles aparecen para tus alumnos.
-        </div>
+        <>
+          <form onSubmit={addTestimonial} className="card space-y-3 p-5">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-brand" />
+              <span className="text-sm font-medium text-white">Agregar testimonio</span>
+            </div>
+            <p className="text-xs text-muted">
+              Publica el testimonio de un alumno. Aparece al instante bajo el video de
+              bienvenida y aquí, sin necesidad de aprobarlo.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_1fr]">
+              <input
+                className="input"
+                placeholder="Nombre del alumno"
+                value={tName}
+                maxLength={60}
+                onChange={(e) => setTName(e.target.value)}
+              />
+              <textarea
+                className="input min-h-[44px] resize-y sm:min-h-0"
+                placeholder="Lo que dijo sobre las clases..."
+                value={tBody}
+                onChange={(e) => setTBody(e.target.value)}
+              />
+            </div>
+            {tError && <p className="text-xs text-neg">{tError}</p>}
+            <button
+              type="submit"
+              disabled={tSending || tName.trim().length < 2 || tBody.trim().length < 3}
+              className="btn-primary disabled:opacity-50"
+            >
+              {tSending ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Publicando...</>
+              ) : (
+                <><Plus className="h-4 w-4" /> Publicar testimonio</>
+              )}
+            </button>
+          </form>
+
+          <div className="flex items-center gap-2 rounded-xl border border-line bg-card-soft/50 px-4 py-3 text-xs text-muted">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-brand" />
+            Aquí ves <strong className="font-medium text-white/90">todos</strong> los
+            comentarios (los tuyos y los de alumnos). Muestra u oculta cuáles aparecen.
+          </div>
+        </>
       )}
 
       {/* Lista */}
