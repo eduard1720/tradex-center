@@ -29,6 +29,7 @@ export function Topbar() {
   }
 
   return (
+    <>
     <header className="sticky top-0 z-30 border-b border-line bg-bg/70 backdrop-blur-xl">
       <div className="flex h-16 items-center gap-3 px-4 md:px-6">
         {/* Mobile menu + logo */}
@@ -83,10 +84,13 @@ export function Topbar() {
           </div>
         </div>
       </div>
+    </header>
 
-      {/* Mobile drawer */}
+      {/* Menú móvil: fuera del <header> a propósito. El header usa
+          backdrop-blur, que crea un containing block y rompía el
+          position:fixed del panel (se recortaba al alto del header). */}
       {open && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-[60] md:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
           <div className="absolute left-0 top-0 h-full w-72 border-r border-line bg-bg-soft p-4">
             <div className="mb-6 flex items-center justify-between">
@@ -121,6 +125,6 @@ export function Topbar() {
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
