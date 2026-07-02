@@ -6,7 +6,6 @@ import { useState } from "react";
 import { HelpCircle, Settings, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Logo } from "./Logo";
 import { SidebarVigencia } from "./SidebarVigencia";
-import { AdminControl } from "./AdminControl";
 import { useAdmin } from "@/lib/admin";
 import { MAIN_NAV, ADMIN_NAV, type NavItem } from "@/lib/nav";
 
@@ -97,7 +96,6 @@ export function Sidebar() {
       </div>
 
       <div className="mt-2 flex flex-col gap-1 border-t border-line pt-3">
-        <AdminControl collapsed={collapsed} />
         <NavLink
           item={{ label: "Ayuda", href: "/ayuda", icon: HelpCircle }}
           active={isActive("/ayuda")}
