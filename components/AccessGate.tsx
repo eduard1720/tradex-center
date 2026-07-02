@@ -101,7 +101,7 @@ function MediaPanel() {
       {reduce ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url(/bg-trading.jpg)" }}
+          style={{ backgroundImage: "url(/oficialvideo-poster.jpg)" }}
         />
       ) : (
         <video
@@ -112,9 +112,9 @@ function MediaPanel() {
           muted
           playsInline
           preload="auto"
-          poster="/bg-trading.jpg"
+          poster="/oficialvideo-poster.jpg"
         >
-          <source src="/bg-trading-loop.mp4" type="video/mp4" />
+          <source src="/oficialvideo.mp4" type="video/mp4" />
         </video>
       )}
 

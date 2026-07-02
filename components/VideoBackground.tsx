@@ -45,7 +45,7 @@ export function VideoBackground() {
       {reduce ? (
         <div
           className="bg-media__layer"
-          style={{ backgroundImage: "url(/bg-trading.jpg)", backgroundSize: "cover", backgroundPosition: "center" }}
+          style={{ backgroundImage: "url(/oficialvideo-poster.jpg)", backgroundSize: "cover", backgroundPosition: "center" }}
         />
       ) : (
         <video
@@ -56,9 +56,9 @@ export function VideoBackground() {
           muted
           playsInline
           preload="auto"
-          poster="/bg-trading.jpg"
+          poster="/oficialvideo-poster.jpg"
         >
-          <source src="/bg-trading-loop.mp4" type="video/mp4" />
+          <source src="/oficialvideo.mp4" type="video/mp4" />
         </video>
       )}
       <div className="bg-media__veil" />
