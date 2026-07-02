@@ -9,7 +9,7 @@ import {
   PlayCircle,
   BarChart3,
   ChevronRight,
-  ChevronDown,
+  ArrowLeft,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -45,10 +45,7 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
   const isAdmin = useAdmin();
   const router = useRouter();
   const [editing, setEditing] = useState<TradingClass | null>(null);
-  // Estado de despliegue por módulo (override del valor por defecto).
-  const [openOverride, setOpenOverride] = useState<Record<number, boolean>>({});
-  const toggleOpen = (module: number, current: boolean) =>
-    setOpenOverride((o) => ({ ...o, [module]: !current }));
+  const [openModule, setOpenModule] = useState<number | null>(null);
 
   useEffect(() => {
     const sync = () => setCompleted(getCompleted());
@@ -58,6 +55,8 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
   }, []);
 
   const moduleDone = (g: ModuleGroup) => g.lessons.every((l) => completed.has(l.id));
+  const doneCountOf = (g: ModuleGroup) => g.lessons.filter((l) => completed.has(l.id)).length;
+  const isUnlocked = (mi: number) => isAdmin || mi === 0 || moduleDone(modules[mi - 1]);
 
   async function deleteLesson(id: string) {
     if (!window.confirm("¿Eliminar esta clase? No se puede deshacer.")) return;
@@ -85,6 +84,7 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
       method: "DELETE",
       headers: { "x-admin-password": getAdminPw() ?? "" },
     });
+    setOpenModule(null);
     router.refresh();
   }
 
@@ -96,111 +96,81 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
     );
   }
 
-  return (
-    <div className="space-y-5">
-      {modules.map((g, mi) => {
-        // Un módulo se desbloquea cuando el anterior está completo.
-        // En modo admin todo está desbloqueado para poder gestionarlo.
-        const moduleUnlocked = isAdmin || mi === 0 || moduleDone(modules[mi - 1]);
-        const doneCount = g.lessons.filter((l) => completed.has(l.id)).length;
-        const pct = Math.round((doneCount / g.lessons.length) * 100);
-        // Por defecto se despliega el módulo desbloqueado que aún no terminas.
-        const defaultOpen = moduleUnlocked && doneCount < g.lessons.length;
-        const expanded = openOverride[g.module] ?? defaultOpen;
+  const detailIndex =
+    openModule != null ? modules.findIndex((m) => m.module === openModule) : -1;
+  const detail = detailIndex >= 0 ? modules[detailIndex] : null;
 
-        return (
-          <div
-            key={g.module}
-            className={`card overflow-hidden p-0 ${!moduleUnlocked ? "opacity-90" : ""}`}
+  /* ------------------------------ Detalle del módulo ------------------------ */
+  if (detail) {
+    const moduleUnlocked = isUnlocked(detailIndex);
+    const doneCount = doneCountOf(detail);
+    const pct = Math.round((doneCount / detail.lessons.length) * 100);
+
+    return (
+      <>
+        <div className="animate-fade-up space-y-5">
+          <button
+            onClick={() => setOpenModule(null)}
+            className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-white"
           >
-            {/* Cabecera del módulo (clic para desplegar/plegar) */}
-            <button
-              type="button"
-              onClick={() => toggleOpen(g.module, expanded)}
-              className="flex w-full flex-wrap items-center justify-between gap-3 border-b border-line p-5 text-left transition-colors hover:bg-card-hover/40"
-            >
+            <ArrowLeft className="h-4 w-4" /> Volver a los módulos
+          </button>
+
+          <div className="card overflow-hidden p-0">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-5">
               <div className="flex items-center gap-3">
-                <ChevronDown
-                  className={`h-4 w-4 shrink-0 text-muted transition-transform ${expanded ? "" : "-rotate-90"}`}
-                />
-                <span
-                  className={`grid h-11 w-11 place-items-center rounded-xl text-sm font-bold ${
-                    moduleUnlocked ? "bg-brand text-black" : "bg-card-soft text-muted"
-                  }`}
-                >
-                  {moduleUnlocked ? g.module : <Lock className="h-5 w-5" />}
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand text-sm font-bold text-black">
+                  {detail.module}
                 </span>
-                {g.lessons[0]?.thumbnail && (
-                  <div className="relative hidden aspect-video w-20 shrink-0 overflow-hidden rounded-lg border border-line bg-card-soft sm:block">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={g.lessons[0].thumbnail}
-                      alt=""
-                      className={`h-full w-full object-cover ${moduleUnlocked ? "" : "opacity-40 grayscale"}`}
-                    />
-                  </div>
-                )}
                 <div>
-                  <p className="text-[11px] uppercase tracking-wider text-muted">Módulo {g.module}</p>
-                  <h3 className="text-base font-semibold text-white">{g.title}</h3>
+                  <p className="text-[11px] uppercase tracking-wider text-muted">
+                    Módulo {detail.module}
+                  </p>
+                  <h2 className="text-lg font-semibold text-white">{detail.title}</h2>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 {isAdmin && (
                   <div className="flex items-center gap-1">
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        renameModuleHandler(g.module, g.title);
-                      }}
+                    <button
+                      onClick={() => renameModuleHandler(detail.module, detail.title)}
                       title="Renombrar módulo"
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:text-white"
+                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted transition-colors hover:text-white"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                    </span>
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteModuleHandler(g.module);
-                      }}
+                    </button>
+                    <button
+                      onClick={() => deleteModuleHandler(detail.module)}
                       title="Eliminar módulo"
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:border-neg/40 hover:text-neg"
+                      className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted transition-colors hover:border-neg/40 hover:text-neg"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                    </span>
+                    </button>
                   </div>
                 )}
                 <div className="text-right">
-                  <p className="text-sm font-medium text-white">
-                    {doneCount}/{g.lessons.length} clases
+                  <p className="font-mono text-sm font-medium text-white">
+                    {doneCount}/{detail.lessons.length}
                   </p>
                   <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-card-soft">
                     <span className="block h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               </div>
-            </button>
+            </div>
 
-            {/* Mensaje de bloqueo */}
-            {expanded && !moduleUnlocked && (
+            {!moduleUnlocked && (
               <div className="flex items-center gap-2 bg-card-soft/40 px-5 py-2.5 text-xs text-muted">
                 <Lock className="h-3.5 w-3.5" />
-                Completa el <strong className="text-white/80">Módulo {modules[mi - 1].module}</strong> para desbloquear este módulo.
+                Completa el módulo anterior para desbloquear estas clases.
               </div>
             )}
 
-            {/* Clases del módulo */}
-            {expanded && (
             <ul className="divide-y divide-line">
-              {g.lessons.map((lesson, li) => {
+              {detail.lessons.map((lesson, li) => {
                 const isDone = completed.has(lesson.id);
-                const prevDone = li === 0 || completed.has(g.lessons[li - 1].id);
+                const prevDone = li === 0 || completed.has(detail.lessons[li - 1].id);
                 const unlocked = moduleUnlocked && (isAdmin || prevDone);
-
                 return (
                   <li key={lesson.id} className="flex items-center">
                     <div className="min-w-0 flex-1">
@@ -217,14 +187,14 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
                         <button
                           onClick={() => setEditing(lesson)}
                           title="Editar clase"
-                          className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:text-white"
+                          className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted transition-colors hover:text-white"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => deleteLesson(lesson.id)}
                           title="Eliminar clase"
-                          className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:border-neg/40 hover:text-neg"
+                          className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted transition-colors hover:border-neg/40 hover:text-neg"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -234,21 +204,93 @@ export function ModulesView({ classes }: { classes: TradingClass[] }) {
                 );
               })}
             </ul>
-            )}
           </div>
+        </div>
+
+        {editing && (
+          <ClassEditModal
+            cls={editing}
+            onClose={() => setEditing(null)}
+            onSaved={() => {
+              setEditing(null);
+              router.refresh();
+            }}
+          />
+        )}
+      </>
+    );
+  }
+
+  /* ------------------------------- Grilla de cards -------------------------- */
+  return (
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {modules.map((g, mi) => {
+        const moduleUnlocked = isUnlocked(mi);
+        const doneCount = doneCountOf(g);
+        const pct = Math.round((doneCount / g.lessons.length) * 100);
+        const done = doneCount === g.lessons.length;
+        const cover = g.lessons.find((l) => l.thumbnail)?.thumbnail;
+
+        return (
+          <button
+            key={g.module}
+            type="button"
+            disabled={!moduleUnlocked}
+            onClick={() => setOpenModule(g.module)}
+            title={moduleUnlocked ? undefined : "Completa el módulo anterior para desbloquear"}
+            className={`card group flex flex-col overflow-hidden p-0 text-left transition-colors duration-150 ${
+              moduleUnlocked ? "hover:border-white/15" : "cursor-not-allowed opacity-70"
+            }`}
+          >
+            {/* Portada */}
+            <div className="relative aspect-video w-full overflow-hidden bg-card-soft">
+              {cover ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={cover}
+                  alt=""
+                  className={`h-full w-full object-cover transition-transform duration-300 ${
+                    moduleUnlocked ? "group-hover:scale-105" : "grayscale"
+                  }`}
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center bg-gradient-to-br from-card-soft to-bg">
+                  <span className="font-mono text-5xl font-semibold text-white/10">
+                    {String(g.module).padStart(2, "0")}
+                  </span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <span className="absolute left-3 top-3 rounded-md bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
+                Módulo {g.module}
+              </span>
+              {!moduleUnlocked ? (
+                <span className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-muted backdrop-blur-sm">
+                  <Lock className="h-3.5 w-3.5" />
+                </span>
+              ) : done ? (
+                <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-pos/20 px-2 py-0.5 text-[11px] font-medium text-pos backdrop-blur-sm">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Completado
+                </span>
+              ) : null}
+            </div>
+
+            {/* Cuerpo */}
+            <div className="flex flex-1 flex-col p-4">
+              <h3 className="text-sm font-semibold leading-snug text-white">{g.title}</h3>
+              <div className="mt-auto pt-3">
+                <div className="flex items-center justify-between text-[11px] text-muted">
+                  <span>{doneCount}/{g.lessons.length} clases</span>
+                  <span className="font-mono tabular-nums">{pct}%</span>
+                </div>
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-card-soft">
+                  <span className="block h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            </div>
+          </button>
         );
       })}
-
-      {editing && (
-        <ClassEditModal
-          cls={editing}
-          onClose={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            router.refresh();
-          }}
-        />
-      )}
     </div>
   );
 }

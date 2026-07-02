@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------------- */
 /*  Tipo de cambio paralelo (dólar blue) — Bolivia                            */
-/*  Fuente: CriptoYa (agrega varios exchanges USDT/BOB); respaldo: Binance.   */
+/*  Fuente principal: Binance P2P (USDT/BOB); respaldo: CriptoYa.             */
 /* -------------------------------------------------------------------------- */
 
 import { hasSupabase, getSupabase } from "./supabase";

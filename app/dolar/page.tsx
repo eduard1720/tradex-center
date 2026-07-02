@@ -40,8 +40,8 @@ export default async function DolarPage() {
           Dólar blue
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted">
-          Cotización del dólar paralelo en Bolivia (USDT/BOB, promedio de varios
-          exchanges vía CriptoYa). Referencia educativa, no es casa de cambio.
+          Cotización del dólar paralelo en Bolivia (USDT/BOB en Binance P2P).
+          Referencia educativa, no es casa de cambio.
         </p>
       </div>
 
