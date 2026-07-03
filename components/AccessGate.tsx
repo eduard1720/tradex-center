@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Ban, Check, Loader2, MessageCircle, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { IntroMotion } from "@/components/IntroMotion";
 import { SITE, waLink } from "@/lib/site";
 import { useAdmin, loginAdmin } from "@/lib/admin";
 import { useStudent, loginStudent, acceptTerms } from "@/lib/student";
@@ -20,8 +21,22 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const isAdmin = useAdmin();
   const student = useStudent();
   const [mounted, setMounted] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
+  // Marca que en esta sesión se mostró la puerta (login/términos). Solo así
+  // reproducimos la intro tras autenticarse — no en recargas ya con sesión.
+  const cameFromGate = useRef(false);
+
+  const authorized = isAdmin || Boolean(student && student.termsAccepted);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    // Al mostrarse la puerta (sin sesión) marcamos que la intro debe verse al
+    // autenticarse, y la rearmamos por si fue un cierre de sesión previo.
+    if (mounted && !authorized) {
+      cameFromGate.current = true;
+      setIntroDone(false);
+    }
+  }, [mounted, authorized]);
 
   // Evita parpadeos de contenido protegido durante la hidratación.
   if (!mounted) {
@@ -32,9 +47,17 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isAdmin) return <>{children}</>;
-  if (!student) return <LoginScreen />;
-  if (!student.termsAccepted) return <TermsScreen />;
+  if (!authorized) {
+    if (student && !student.termsAccepted) return <TermsScreen />;
+    return <LoginScreen />;
+  }
+
+  // Autenticado. Si acaba de iniciar sesión (venía de la puerta) y aún no se
+  // reprodujo la animación, muéstrala pegada antes de revelar la plataforma.
+  if (cameFromGate.current && !introDone) {
+    return <IntroMotion onDone={() => setIntroDone(true)} />;
+  }
+
   return <>{children}</>;
 }
 
