@@ -1,5 +1,6 @@
 import { getAllClasses } from "@/lib/data";
-import { ProgressView, type ProgressModule } from "@/components/ProgressView";
+import type { ProgressModule } from "@/components/ProgressView";
+import { ProgresoSwitch } from "@/components/ProgresoSwitch";
 
 export const metadata = { title: "Mi progreso — TradeX Center" };
 export const dynamic = "force-dynamic";
@@ -27,17 +28,5 @@ export default async function ProgresoPage() {
     m.lessons.sort((a, b) => a.id.localeCompare(b.id));
   }
 
-  return (
-    <div className="space-y-6 animate-fade-up">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Mi progreso</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted">
-          Tu avance se guarda en tu cuenta: completa las clases y míralo reflejado aquí desde
-          cualquier dispositivo.
-        </p>
-      </div>
-
-      <ProgressView modules={modules} />
-    </div>
-  );
+  return <ProgresoSwitch modules={modules} />;
 }

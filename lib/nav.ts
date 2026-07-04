@@ -19,6 +19,8 @@ export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
+  /** Etiqueta alternativa cuando la ve Angel (modo admin). */
+  adminLabel?: string;
 }
 
 export const MAIN_NAV: NavItem[] = [
@@ -31,8 +33,8 @@ export const MAIN_NAV: NavItem[] = [
   { label: "Noticias", href: "/noticias", icon: Newspaper },
   { label: "Mercado", href: "/mercado", icon: LineChart },
   { label: "Dólar paralelo", href: "/dolar", icon: DollarSign },
-  { label: "Mi progreso", href: "/progreso", icon: Trophy },
-  { label: "Comunidad", href: "/comunidad", icon: Users },
+  { label: "Mi progreso", href: "/progreso", icon: Trophy, adminLabel: "Progreso de alumnos" },
+  { label: "Comunidad", href: "/comunidad", icon: Users, adminLabel: "Gestión de comunidad" },
 ];
 
 export const ADMIN_NAV: NavItem[] = [

@@ -114,7 +114,7 @@ export function Topbar() {
                     }`}
                   >
                     <Icon className={`h-[18px] w-[18px] ${active ? "text-brand" : ""}`} />
-                    {item.label}
+                    {isAdmin && item.adminLabel ? item.adminLabel : item.label}
                   </Link>
                 );
               })}

@@ -13,16 +13,19 @@ function NavLink({
   item,
   active,
   collapsed,
+  label,
 }: {
   item: NavItem;
   active: boolean;
   collapsed: boolean;
+  label?: string;
 }) {
   const Icon = item.icon;
+  const text = label ?? item.label;
   return (
     <Link
       href={item.href}
-      title={collapsed ? item.label : undefined}
+      title={collapsed ? text : undefined}
       className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-150 ${
         active
           ? "bg-white/[0.06] text-white"
@@ -33,7 +36,7 @@ function NavLink({
         <span className="absolute left-0 top-1/2 h-5 -translate-y-1/2 rounded-r-full bg-brand" style={{ width: 3 }} />
       )}
       <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${active ? "text-brand" : "text-muted/80 group-hover:text-white/80"}`} />
-      {!collapsed && <span className={`truncate ${active ? "font-medium" : "font-normal"}`}>{item.label}</span>}
+      {!collapsed && <span className={`truncate ${active ? "font-medium" : "font-normal"}`}>{text}</span>}
     </Link>
   );
 }
@@ -66,7 +69,13 @@ export function Sidebar() {
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
         {MAIN_NAV.map((item) => (
-          <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} />
+          <NavLink
+            key={item.href}
+            item={item}
+            active={isActive(item.href)}
+            collapsed={collapsed}
+            label={isAdmin && item.adminLabel ? item.adminLabel : item.label}
+          />
         ))}
 
         {/* Sección de instructor: solo visible para Angel (modo admin) */}

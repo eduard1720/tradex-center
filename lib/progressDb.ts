@@ -19,6 +19,23 @@ export async function getCompletedClassIds(studentId: number): Promise<string[]>
   }
 }
 
+/** Progreso de todos los alumnos: una fila por clase completada. Solo admin. */
+export async function getAllProgress(): Promise<{ studentId: number; classId: string }[]> {
+  if (!hasSupabase()) return [];
+  try {
+    const { data, error } = await getSupabase()
+      .from("progress")
+      .select("student_id, class_id");
+    if (error || !data) return [];
+    return (data as { student_id: number; class_id: string }[]).map((r) => ({
+      studentId: r.student_id,
+      classId: r.class_id,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function markCompleted(studentId: number, classId: string): Promise<void> {
   const { error } = await getSupabase()
     .from("progress")
