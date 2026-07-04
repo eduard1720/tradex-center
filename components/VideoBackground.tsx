@@ -58,6 +58,7 @@ export function VideoBackground() {
           preload="auto"
           poster="/oficialvideo-poster.jpg"
         >
+          <source src="/oficialvideo.webm" type="video/webm" />
           <source src="/oficialvideo.mp4" type="video/mp4" />
         </video>
       )}

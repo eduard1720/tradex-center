@@ -124,7 +124,7 @@ function MediaPanel() {
       {reduce ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url(/oficialvideo-poster.jpg)" }}
+          style={{ backgroundImage: "url(/motionlogin-poster.jpg)" }}
         />
       ) : (
         <video
@@ -135,9 +135,10 @@ function MediaPanel() {
           muted
           playsInline
           preload="auto"
-          poster="/oficialvideo-poster.jpg"
+          poster="/motionlogin-poster.jpg"
         >
-          <source src="/oficialvideo.mp4" type="video/mp4" />
+          <source src="/motionlogin.webm" type="video/webm" />
+          <source src="/motionlogin.mp4" type="video/mp4" />
         </video>
       )}
 

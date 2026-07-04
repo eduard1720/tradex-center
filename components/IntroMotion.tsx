@@ -34,6 +34,7 @@ export function IntroMotion({ onDone }: { onDone: () => void }) {
         onEnded={finish}
         onError={finish}
       >
+        <source src="/motion.webm" type="video/webm" />
         <source src="/motion.mp4" type="video/mp4" />
       </video>
     </div>
