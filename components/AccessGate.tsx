@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Ban, Check, Loader2, MessageCircle, ShieldCheck } from "lucide-react";
+import { Ban, Check, Eye, EyeOff, Loader2, MessageCircle, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { IntroMotion } from "@/components/IntroMotion";
 import { SITE, waLink } from "@/lib/site";
@@ -185,6 +185,7 @@ function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [blocked, setBlocked] = useState(false);
+  const [showCode, setShowCode] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -221,25 +222,37 @@ function LoginScreen() {
           <label htmlFor="access-code" className="label">
             Código de acceso
           </label>
-          <input
-            id="access-code"
-            autoFocus
-            autoComplete="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            maxLength={32}
-            disabled={loading}
-            aria-invalid={Boolean(error)}
-            className={`w-full rounded-xl border bg-card-soft px-4 py-3.5 font-mono text-base font-medium tracking-[0.24em] text-white outline-none transition focus:border-brand/60 focus:ring-2 focus:ring-brand/15 disabled:opacity-60 ${
-              error ? "border-neg/70" : "border-line"
-            }`}
-            value={code}
-            onChange={(e) => {
-              setCode(e.target.value);
-              if (error) setError("");
-              if (blocked) setBlocked(false);
-            }}
-          />
+          <div className="relative">
+            <input
+              id="access-code"
+              type={showCode ? "text" : "password"}
+              autoFocus
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              maxLength={32}
+              disabled={loading}
+              aria-invalid={Boolean(error)}
+              className={`w-full rounded-xl border bg-card-soft px-4 py-3.5 pr-12 font-mono text-base font-medium tracking-[0.24em] text-white outline-none transition focus:border-brand/60 focus:ring-2 focus:ring-brand/15 disabled:opacity-60 ${
+                error ? "border-neg/70" : "border-line"
+              }`}
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                if (error) setError("");
+                if (blocked) setBlocked(false);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowCode((v) => !v)}
+              tabIndex={-1}
+              aria-label={showCode ? "Ocultar código" : "Mostrar código"}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted transition hover:text-white"
+            >
+              {showCode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           {error && (
             <p role="alert" className="mt-2 text-xs text-neg">
               {error}
