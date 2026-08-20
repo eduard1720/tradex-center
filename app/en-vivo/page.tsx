@@ -5,6 +5,7 @@ import { LiveAdmin } from "@/components/LiveAdmin";
 import { LiveCountdown } from "@/components/LiveCountdown";
 import { LiveNotifyButtons } from "@/components/LiveNotifyButtons";
 import { LiveStreamPlayer } from "@/components/LiveStreamPlayer";
+import { LiveChat } from "@/components/LiveChat";
 
 export const metadata = { title: "Clases en vivo — TradeX Center" };
 export const dynamic = "force-dynamic";
@@ -40,7 +41,14 @@ export default async function EnVivoPage() {
         </p>
       </div>
 
-      {live && <LiveStreamPlayer isLive title={live.title} />}
+      {live && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <LiveStreamPlayer isLive title={live.title} />
+          </div>
+          <LiveChat sessionId={live.id} />
+        </div>
+      )}
 
       {/* Próxima sesión */}
       <div className="card relative overflow-hidden p-6">

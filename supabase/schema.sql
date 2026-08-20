@@ -79,6 +79,23 @@ create policy "Lectura publica en vivo"
   using (true);
 
 -- ---------------------------------------------------------------------------
+-- Chat en vivo: mensajes durante una clase en vivo (live_sessions).
+-- Sin lectura pública: se accede solo desde el servidor, igual que stream_url,
+-- para reusar la misma validación de sesión (alumno activo o Angel).
+-- ---------------------------------------------------------------------------
+create table if not exists public.live_chat_messages (
+  id          bigserial primary key,
+  session_id  bigint not null references public.live_sessions(id) on delete cascade,
+  student_id  bigint references public.students(id) on delete set null,
+  author_name text not null,
+  is_admin    boolean not null default false,
+  body        text not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists live_chat_session_idx on public.live_chat_messages (session_id, id);
+alter table public.live_chat_messages enable row level security;
+
+-- ---------------------------------------------------------------------------
 -- Herramientas: archivos (PDF, diapositivas, libros…) que sube Angel.
 -- ---------------------------------------------------------------------------
 create table if not exists public.resources (
