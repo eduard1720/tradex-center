@@ -12,6 +12,7 @@ export interface ParsedVideo {
  *   - https://youtu.be/ID
  *   - https://www.youtube.com/embed/ID
  *   - https://www.youtube.com/shorts/ID
+ *   - https://www.youtube.com/live/ID
  *   - https://vimeo.com/ID
  *   - https://player.vimeo.com/video/ID
  */
@@ -20,7 +21,7 @@ export function parseVideo(rawUrl: string): ParsedVideo {
 
   // --- YouTube ---
   const yt =
-    url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/) ||
+    url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/) ||
     url.match(/[?&]v=([A-Za-z0-9_-]{11})/);
   if (yt && yt[1]) {
     const id = yt[1];
