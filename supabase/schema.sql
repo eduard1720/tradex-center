@@ -65,6 +65,13 @@ create table if not exists public.live_sessions (
   link       text not null default '',
   created_at timestamptz not null default now()
 );
+-- stream_url: enlace de YouTube (no listado) de la transmisión — NUNCA se
+-- expone al cliente vía SSR; solo se lee server-side desde /api/live/current
+-- tras validar la sesión del alumno o de Angel.
+alter table public.live_sessions add column if not exists stream_url text not null default '';
+-- is_live: Angel activa/desactiva la transmisión en curso. Es seguro exponerlo
+-- (no revela el enlace), se usa para mostrar el reproductor en /en-vivo.
+alter table public.live_sessions add column if not exists is_live boolean not null default false;
 alter table public.live_sessions enable row level security;
 drop policy if exists "Lectura publica en vivo" on public.live_sessions;
 create policy "Lectura publica en vivo"

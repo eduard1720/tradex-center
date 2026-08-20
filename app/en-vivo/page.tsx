@@ -4,6 +4,7 @@ import { getLiveSessions } from "@/lib/live";
 import { LiveAdmin } from "@/components/LiveAdmin";
 import { LiveCountdown } from "@/components/LiveCountdown";
 import { LiveNotifyButtons } from "@/components/LiveNotifyButtons";
+import { LiveStreamPlayer } from "@/components/LiveStreamPlayer";
 
 export const metadata = { title: "Clases en vivo — TradeX Center" };
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ export default async function EnVivoPage() {
     (s) => new Date(s.startsAt).getTime() >= now - 2 * 60 * 60 * 1000
   );
   const next = upcoming[0];
+  const live = sessions.find((s) => s.isLive);
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -37,6 +39,8 @@ export default async function EnVivoPage() {
           Análisis del mercado en directo, resolución de dudas y operativa en tiempo real.
         </p>
       </div>
+
+      {live && <LiveStreamPlayer isLive title={live.title} />}
 
       {/* Próxima sesión */}
       <div className="card relative overflow-hidden p-6">

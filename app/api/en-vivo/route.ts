@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hasSupabase } from "@/lib/supabase";
-import { getLiveSessions, addLiveSession, deleteLiveSession } from "@/lib/live";
+import { getLiveSessions, addLiveSession, deleteLiveSession, setLiveStream } from "@/lib/live";
+import { isValidVideoUrl } from "@/lib/video";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "angel-admin";
 
@@ -48,6 +49,47 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("Error al guardar la sesión en vivo:", err);
     return NextResponse.json({ error: "No se pudo guardar la sesión." }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: "Acceso denegado." }, { status: 401 });
+  }
+  if (!hasSupabase()) {
+    return NextResponse.json(
+      { error: "Las clases en vivo requieren la base de datos (Supabase)." },
+      { status: 503 }
+    );
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const id = Number(body.id);
+  const isLive = Boolean(body.isLive);
+  const streamUrl = String(body.streamUrl ?? "").trim();
+
+  if (!id) {
+    return NextResponse.json({ error: "Id inválido." }, { status: 400 });
+  }
+  if (isLive && !isValidVideoUrl(streamUrl)) {
+    return NextResponse.json(
+      { error: "Pega un enlace válido de YouTube (no listado) para iniciar la transmisión." },
+      { status: 422 }
+    );
+  }
+
+  try {
+    await setLiveStream(id, { streamUrl, isLive });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("Error al actualizar la transmisión en vivo:", err);
+    return NextResponse.json({ error: "No se pudo actualizar la transmisión." }, { status: 500 });
   }
 }
 

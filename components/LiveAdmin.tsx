@@ -2,11 +2,82 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarPlus, Trash2, Loader2, ShieldCheck } from "lucide-react";
+import { CalendarPlus, Trash2, Loader2, ShieldCheck, Radio, Square } from "lucide-react";
 import { useAdmin, getAdminPw } from "@/lib/admin";
 import type { LiveSession } from "@/lib/live";
 
 const empty = { title: "", startsAt: "", link: "" };
+
+function StreamControl({ session, onChanged }: { session: LiveSession; onChanged: () => void }) {
+  const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function patch(body: { isLive: boolean; streamUrl: string }) {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/en-vivo", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": getAdminPw() ?? "",
+        },
+        body: JSON.stringify({ id: session.id, ...body }),
+      });
+      setBusy(false);
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error ?? "No se pudo actualizar la transmisión.");
+        return;
+      }
+      setUrl("");
+      onChanged();
+    } catch {
+      setBusy(false);
+      setError("Error de red. Inténtalo de nuevo.");
+    }
+  }
+
+  if (session.isLive) {
+    return (
+      <div className="mt-2 flex items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-neg/15 px-2.5 py-1 text-xs font-medium text-neg">
+          <Radio className="h-3.5 w-3.5 animate-pulse" /> En vivo
+        </span>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => patch({ isLive: false, streamUrl: "" })}
+          className="btn-ghost !py-1.5 text-xs disabled:opacity-60"
+        >
+          <Square className="h-3.5 w-3.5" /> Detener transmisión
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      <input
+        className="input !py-1.5 text-xs sm:w-64"
+        placeholder="Enlace de YouTube (No listado)"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+      />
+      <button
+        type="button"
+        disabled={busy || !url.trim()}
+        onClick={() => patch({ isLive: true, streamUrl: url.trim() })}
+        className="btn-ghost !py-1.5 text-xs disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Radio className="h-3.5 w-3.5" />}
+        Iniciar transmisión
+      </button>
+      {error && <p className="w-full text-[11px] text-neg">{error}</p>}
+    </div>
+  );
+}
 
 function formatWhen(iso: string): string {
   return new Date(iso).toLocaleString("es-BO", {
@@ -125,18 +196,21 @@ export function LiveAdmin({ sessions }: { sessions: LiveSession[] }) {
           </p>
           <ul className="divide-y divide-line">
             {sessions.map((s) => (
-              <li key={s.id} className="flex items-center justify-between gap-3 py-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white">{s.title}</p>
-                  <p className="text-xs text-muted">{formatWhen(s.startsAt)}</p>
+              <li key={s.id} className="py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">{s.title}</p>
+                    <p className="text-xs text-muted">{formatWhen(s.startsAt)}</p>
+                  </div>
+                  <button
+                    onClick={() => remove(s.id)}
+                    title="Eliminar"
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line text-muted hover:border-neg/40 hover:text-neg"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => remove(s.id)}
-                  title="Eliminar"
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line text-muted hover:border-neg/40 hover:text-neg"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <StreamControl session={s} onChanged={() => router.refresh()} />
               </li>
             ))}
           </ul>
