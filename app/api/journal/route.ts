@@ -55,6 +55,7 @@ export async function POST(req: Request) {
       outcome,
       riskReward: String(body.riskReward ?? "").trim(),
       notes: String(body.notes ?? "").trim(),
+      chartImage: String(body.chartImage ?? "").trim(),
     });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (err) {

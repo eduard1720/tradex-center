@@ -1,7 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Trash2, TrendingUp, TrendingDown, Minus, Lock } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Lock,
+  ImagePlus,
+  X,
+  LineChart,
+} from "lucide-react";
 import { useStudent, getStudentCode } from "@/lib/student";
 import type { JournalEntry, Direction, Outcome } from "@/lib/journal";
 
@@ -20,6 +31,7 @@ const emptyForm = {
   outcome: "be" as Outcome,
   riskReward: "",
   notes: "",
+  chartImage: "",
 };
 
 export function JournalBoard() {
@@ -29,8 +41,39 @@ export function JournalBoard() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingChart, setUploadingChart] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  async function pasteChart(e: React.ClipboardEvent<HTMLDivElement>) {
+    const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith("image/"));
+    if (!item) return;
+    e.preventDefault();
+    const file = item.getAsFile();
+    if (!file) return;
+    setUploadingChart(true);
+    setError("");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/journal/chart", {
+        method: "POST",
+        headers: { "x-student-code": getStudentCode() ?? "" },
+        body,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo subir la imagen.");
+        return;
+      }
+      set("chartImage", data.url);
+    } catch {
+      setError("Error de red al subir la imagen.");
+    } finally {
+      setUploadingChart(false);
+    }
+  }
 
   const load = useCallback(async () => {
     const res = await fetch("/api/journal", {
@@ -182,6 +225,48 @@ export function JournalBoard() {
             />
           </div>
         </div>
+
+        <div>
+          <label className="label">Gráfica</label>
+          {form.chartImage ? (
+            <div className="relative inline-block">
+              <img
+                src={form.chartImage}
+                alt="Captura del gráfico"
+                className="h-28 w-auto rounded-lg border border-line object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => set("chartImage", "")}
+                title="Quitar imagen"
+                className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full border border-line bg-bg text-muted hover:text-neg"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div
+              tabIndex={0}
+              onPaste={pasteChart}
+              className="flex h-20 cursor-text items-center gap-2 rounded-xl border border-dashed border-line bg-card-soft/60 px-4 text-sm text-muted outline-none focus:border-brand/60"
+            >
+              {uploadingChart ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Subiendo captura...
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="h-4 w-4" />
+                  En TradingView, presiona <kbd className="rounded border border-line bg-bg px-1.5 py-0.5 text-[11px]">Alt</kbd>
+                  +
+                  <kbd className="rounded border border-line bg-bg px-1.5 py-0.5 text-[11px]">S</kbd>
+                  , haz clic aquí y pega con Ctrl+V
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
         {error && <p className="text-xs text-neg">{error}</p>}
         <button type="submit" disabled={saving} className="btn-primary disabled:opacity-60">
           {saving ? (
@@ -213,6 +298,7 @@ export function JournalBoard() {
                   <th className="px-3 py-3 font-medium">Resultado</th>
                   <th className="px-3 py-3 font-medium">R:R</th>
                   <th className="px-3 py-3 font-medium">Notas</th>
+                  <th className="px-3 py-3 font-medium">Gráfica</th>
                   <th className="px-5 py-3" />
                 </tr>
               </thead>
@@ -241,6 +327,22 @@ export function JournalBoard() {
                       {e.riskReward || <Minus className="h-3.5 w-3.5" />}
                     </td>
                     <td className="max-w-[260px] px-3 py-3.5 text-muted">{e.notes}</td>
+                    <td className="px-3 py-3.5">
+                      {e.chartImage ? (
+                        <button
+                          type="button"
+                          onClick={() => setLightbox(e.chartImage)}
+                          title="Ver gráfica"
+                          className="grid h-10 w-14 place-items-center overflow-hidden rounded-lg border border-line hover:border-brand/60"
+                        >
+                          <img src={e.chartImage} alt="" className="h-full w-full object-cover" />
+                        </button>
+                      ) : (
+                        <span className="grid h-10 w-14 place-items-center rounded-lg border border-dashed border-line text-muted">
+                          <LineChart className="h-4 w-4" />
+                        </span>
+                      )}
+                    </td>
                     <td className="px-5 py-3.5 text-right">
                       <button
                         onClick={() => remove(e.id)}
@@ -255,6 +357,25 @@ export function JournalBoard() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-50 grid cursor-zoom-out place-items-center bg-black/80 p-6"
+        >
+          <button
+            onClick={() => setLightbox(null)}
+            className="absolute right-5 top-5 grid h-10 w-10 place-items-center rounded-full border border-line bg-bg-soft text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={lightbox}
+            alt="Gráfica de la operación"
+            className="max-h-[85vh] max-w-full rounded-xl object-contain"
+          />
         </div>
       )}
     </div>

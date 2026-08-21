@@ -190,9 +190,16 @@ create table if not exists public.journal_entries (
   notes         text not null default '',
   created_at    timestamptz not null default now()
 );
+-- Captura del gráfico (ej. snapshot de TradingView con Alt+S, pegada con Ctrl+V).
+alter table public.journal_entries add column if not exists chart_image text not null default '';
 create index if not exists journal_student_idx on public.journal_entries (student_id, entry_date desc);
 alter table public.journal_entries enable row level security;
 -- Sin lectura pública: se accede solo desde el servidor con el código del alumno.
+
+-- Bucket de Storage público para las capturas de gráficos del journal.
+insert into storage.buckets (id, name, public)
+values ('journal-charts', 'journal-charts', true)
+on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------------------
 -- Progreso del alumno: una fila por clase completada.

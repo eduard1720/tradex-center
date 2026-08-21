@@ -15,6 +15,7 @@ export interface JournalEntry {
   outcome: Outcome;
   riskReward: string;
   notes: string;
+  chartImage: string;
 }
 
 interface Row {
@@ -25,6 +26,7 @@ interface Row {
   outcome: string;
   risk_reward: string;
   notes: string;
+  chart_image: string | null;
 }
 
 function rowToEntry(r: Row): JournalEntry {
@@ -36,6 +38,7 @@ function rowToEntry(r: Row): JournalEntry {
     outcome: (r.outcome as Outcome) ?? "be",
     riskReward: r.risk_reward ?? "",
     notes: r.notes ?? "",
+    chartImage: r.chart_image ?? "",
   };
 }
 
@@ -63,6 +66,7 @@ export async function addEntry(
     outcome: Outcome;
     riskReward: string;
     notes: string;
+    chartImage: string;
   }
 ): Promise<void> {
   const { error } = await getSupabase().from("journal_entries").insert({
@@ -73,6 +77,7 @@ export async function addEntry(
     outcome: input.outcome,
     risk_reward: input.riskReward,
     notes: input.notes,
+    chart_image: input.chartImage,
   });
   if (error) throw new Error(error.message);
 }
